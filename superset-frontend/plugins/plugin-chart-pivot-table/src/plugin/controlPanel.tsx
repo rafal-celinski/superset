@@ -62,20 +62,20 @@ const config: ControlPanelConfig = {
         ],
         [
           {
-            name: 'availableGroupbyColumns',
+            name: 'optionalGroupbyColumns',
             config: {
               ...sharedControls.groupby,
-              label: t('available Columns'),
+              label: t('optional Columns'),
               description: t('Columns to group by on the columns'),
             },
           },
         ],
         [
           {
-            name: 'availableGroupbyRows',
+            name: 'optionalGroupbyRows',
             config: {
               ...sharedControls.groupby,
-              label: t('available Rows'),
+              label: t('optional Rows'),
               description: t('Columns to group by on the rows'),
             },
           },
@@ -95,6 +95,8 @@ const config: ControlPanelConfig = {
                 return [
                   ...ensureIsArray(controls?.groupbyColumns.value),
                   ...ensureIsArray(controls?.groupbyRows.value),
+                  ...ensureIsArray(controls?.optionalGroupbyColumns.value),
+                  ...ensureIsArray(controls?.optionalGroupbyRows.value),
                 ]
                   .map(selection => {
                     if (isAdhocColumn(selection)) {

@@ -107,14 +107,14 @@ export default function transformProps(chartProps: ChartProps<QueryFormData>) {
     timeGrainSqla,
     currencyFormat,
     allowRenderHtml,
-    availableGroupbyRows,
-    availableGroupbyColumns,
+    optionalGroupbyRows,
+    optionalGroupbyColumns,
   } = formData;
   const { selectedFilters } = filterState;
   const granularity = extractTimegrain(rawFormData);
 
-  const selectedColumns = ownState.selectedColumns ?? []
-  const selectedRows = ownState.selectedRows ?? []
+  // const selectedColumns = ownState.selectedColumns ?? []
+  // const selectedRows = ownState.selectedRows ?? []
 
   const dateFormatters = colnames
     .filter(
@@ -153,8 +153,8 @@ export default function transformProps(chartProps: ChartProps<QueryFormData>) {
     width,
     height,
     data,
-    groupbyRows: selectedRows,
-    groupbyColumns: selectedColumns,
+    groupbyRows,
+    groupbyColumns,
     metrics,
     tableRenderer,
     colOrder,
@@ -182,7 +182,8 @@ export default function transformProps(chartProps: ChartProps<QueryFormData>) {
     onContextMenu,
     timeGrainSqla,
     allowRenderHtml,
-    availableGroupbyRows,
-    availableGroupbyColumns,
+    optionalGroupbyRows,
+    optionalGroupbyColumns,
+    ownState,
   };
 }

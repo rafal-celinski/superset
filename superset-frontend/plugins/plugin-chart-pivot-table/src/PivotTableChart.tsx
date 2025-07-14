@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { useCallback, useMemo, useState, useEffect} from 'react';
+import { useCallback, useMemo, useState} from 'react';
 import { MinusSquareOutlined, PlusSquareOutlined } from '@ant-design/icons';
 import {
   AdhocMetric,
@@ -44,9 +44,13 @@ import {
   SelectedFiltersType,
 } from './types';
 
-import { Select, Button } from 'antd';
+// import Select from '@superset-ui/chart-controls/lib/components/Select'; 
+import {Button, Select} from 'antd'; 
 import { SelectValue } from 'antd-v5/es/select';
 import { OptionData} from 'rc-select/lib/interface';
+
+
+// import { DndColumnSelect } from '@superset-ui/chart-controls';
 
 
 const Styles = styled.div<PivotTableStylesProps>`
@@ -138,8 +142,8 @@ export default function PivotTableChart(props: PivotTableProps) {
     data,
     height,
     width,
-    groupbyRows: groupbyRowsRaw,
-    groupbyColumns: groupbyColumnsRaw,
+    groupbyRows,
+    groupbyColumns,
     metrics,
     colOrder,
     rowOrder,
@@ -166,8 +170,9 @@ export default function PivotTableChart(props: PivotTableProps) {
     onContextMenu,
     timeGrainSqla,
     allowRenderHtml,
-    availableGroupbyRows,
-    availableGroupbyColumns,
+    optionalGroupbyRows,
+    optionalGroupbyColumns,
+    ownState,
   } = props;
 
   const theme = useTheme();
@@ -241,13 +246,17 @@ export default function PivotTableChart(props: PivotTableProps) {
       ),
     [data, metricNames],
   );
-  const groupbyRows = useMemo(
-    () => groupbyRowsRaw.map(getColumnLabel),
-    [groupbyRowsRaw],
+  
+  const selctedGroupbyColumnsRaw = ownState.selectedGroupbyColumns ?? groupbyColumns;
+  const selectedGroupbyRowsRaw = ownState.selectedGroupbyRows ?? groupbyRows;
+
+  const selectedGroupbyRows = useMemo(
+    () => selectedGroupbyRowsRaw.map(getColumnLabel),
+    [selectedGroupbyRowsRaw],
   );
-  const groupbyColumns = useMemo(
-    () => groupbyColumnsRaw.map(getColumnLabel),
-    [groupbyColumnsRaw],
+  const selectedGroupbyColumns = useMemo(
+    () => selctedGroupbyColumnsRaw.map(getColumnLabel),
+    [selctedGroupbyColumnsRaw],
   );
 
   const sorters = useMemo(
@@ -258,14 +267,14 @@ export default function PivotTableChart(props: PivotTableProps) {
   );
 
     const [queryConfig, setQueryConfig] = useState({
-    selectedColumns: groupbyColumnsRaw,
-    selectedRows: groupbyRowsRaw,
+    selectedGroupbyColumns: selctedGroupbyColumnsRaw,
+    selectedGroupbyRows: selectedGroupbyRowsRaw,
   });
 
   const [rows, cols] = useMemo(() => {
     let [rows_, cols_] = transposePivot
-      ? [groupbyColumns, groupbyRows]
-      : [groupbyRows, groupbyColumns];
+      ? [selectedGroupbyColumns, selectedGroupbyRows]
+      : [selectedGroupbyRows, selectedGroupbyColumns];
 
     if (metricsLayout === MetricsLayoutEnum.ROWS) {
       rows_ = combineMetric ? [...rows_, METRIC_KEY] : [METRIC_KEY, ...rows_];
@@ -275,8 +284,8 @@ export default function PivotTableChart(props: PivotTableProps) {
     return [rows_, cols_];
   }, [
     combineMetric,
-    groupbyColumns,
-    groupbyRows,
+    selectedGroupbyColumns,
+    selectedGroupbyRows,
     metricsLayout,
     transposePivot,
   ]);
@@ -284,7 +293,7 @@ export default function PivotTableChart(props: PivotTableProps) {
   const handleChange = useCallback(
     (filters: SelectedFiltersType) => {
       const filterKeys = Object.keys(filters);
-      const groupby = [...groupbyRowsRaw, ...groupbyColumnsRaw];
+      const groupby = [...selectedGroupbyRowsRaw, ...selctedGroupbyColumnsRaw];
       setDataMask({
         extraFormData: {
           filters:
@@ -324,7 +333,7 @@ export default function PivotTableChart(props: PivotTableProps) {
         },
       });
     },
-    [groupbyColumnsRaw, groupbyRowsRaw, setDataMask],
+    [selctedGroupbyColumnsRaw, selectedGroupbyRowsRaw, setDataMask],
   );
 
   const getCrossFilterDataMask = useCallback(
@@ -345,7 +354,7 @@ export default function PivotTableChart(props: PivotTableProps) {
       }
 
       const filterKeys = Object.keys(values);
-      const groupby = [...groupbyRowsRaw, ...groupbyColumnsRaw];
+      const groupby = [...selectedGroupbyRowsRaw, ...selctedGroupbyColumnsRaw];
       return {
         dataMask: {
           extraFormData: {
@@ -388,7 +397,7 @@ export default function PivotTableChart(props: PivotTableProps) {
         isCurrentValueSelected: isActiveFilterValue(key, val),
       };
     },
-    [groupbyColumnsRaw, groupbyRowsRaw, selectedFilters],
+    [selctedGroupbyColumnsRaw, selectedGroupbyRowsRaw, selectedFilters],
   );
 
   const toggleFilter = useCallback(
@@ -540,7 +549,7 @@ export default function PivotTableChart(props: PivotTableProps) {
                 val: Object.values(dataPoint)[0],
               },
             ],
-            groupbyFieldName: rowKey ? 'groupbyRows' : 'groupbyColumns',
+            groupbyFieldName: rowKey ? 'selectedGroupbyRows' : 'selectedGroupbyColumns',
           },
         });
       }
@@ -562,37 +571,40 @@ export default function PivotTableChart(props: PivotTableProps) {
   };
 
   const handleChangeRow = (value: SelectValue, option: OptionData[]) => {
-    const selectedRows = option.map(v => v.row);
+    const selectedGroupbyRows = option.map(v => v.row);
     
     setQueryConfig(prev => ({
       ...prev,
-      selectedRows,
+      selectedGroupbyRows,
     }));
   };
 
   const handleChangeColumn = (value: SelectValue, option: OptionData[]) => {
-    const selectedColumns = option.map(v => v.column);
+    const selectedGroupbyColumns = option.map(v => v.column);
     
     setQueryConfig(prev => ({
       ...prev,
-      selectedColumns,
+      selectedGroupbyColumns,
     }));
   };
 
+  const availableGroupbyColumns = [...new Set([...optionalGroupbyColumns, ...groupbyColumns])];
+  const availableGroupbyRows = [...new Set([...optionalGroupbyRows, ...groupbyRows])];
+  
 
   return (
     <Styles height={height} width={width} margin={theme.gridUnit * 4}>
       <SelectWrapper>
         <label>Rows</label>
         
-        <Select mode="multiple" onChange={handleChangeRow} defaultValue={groupbyRows}>
+        <Select mode="multiple" onChange={handleChangeRow} defaultValue={selectedGroupbyRows}>
           {availableGroupbyRows.map(row =>(
             <Select.Option value={getColumnLabel(row)} row={row}>{getColumnLabel(row)}</Select.Option>
           ))}
         </Select>
 
         <label>Columns</label>
-        <Select mode="multiple" onChange={handleChangeColumn} defaultValue={groupbyColumns}>
+        <Select mode="multiple" onChange={handleChangeColumn} defaultValue={selectedGroupbyColumns}>
           {availableGroupbyColumns.map(column =>(
             <Select.Option value={getColumnLabel(column)} column={column}>{getColumnLabel(column)}</Select.Option>
           ))}

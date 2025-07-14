@@ -27,18 +27,18 @@ import {
 import { PivotTableQueryFormData, Options} from '../types';
 
 export default function buildQuery(formData: PivotTableQueryFormData, options: Options) {
-  const { extra_form_data } = formData;
+  const {groupbyColumns = [], groupbyRows = [], extra_form_data } = formData;
   const time_grain_sqla = extra_form_data?.time_grain_sqla || formData.time_grain_sqla;
 
   const ownState = options?.ownState ?? {};
-  const groupbyColumns = ownState.selectedColumns ?? []
-  const groupbyRows = ownState.selectedRows ?? []
+  const selectedGroupbyColumns = ownState.selectedGroupbyColumns ?? groupbyColumns;
+  const selectedGroupbyRows = ownState.selectedGroupbyRows ?? groupbyRows;
 
   // TODO: add deduping of AdhocColumns
   const columns = Array.from(
     new Set([
-      ...ensureIsArray<QueryFormColumn>(groupbyColumns),
-      ...ensureIsArray<QueryFormColumn>(groupbyRows),
+      ...ensureIsArray<QueryFormColumn>(selectedGroupbyColumns),
+      ...ensureIsArray<QueryFormColumn>(selectedGroupbyRows),
     ]),
   ).map(col => {
     if (
