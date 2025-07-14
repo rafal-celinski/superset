@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState, useEffect} from 'react';
 import { MinusSquareOutlined, PlusSquareOutlined } from '@ant-design/icons';
 import {
   AdhocMetric,
@@ -44,6 +44,11 @@ import {
   SelectedFiltersType,
 } from './types';
 
+import { Select, Button } from 'antd';
+import { SelectValue } from 'antd-v5/es/select';
+import { OptionData} from 'rc-select/lib/interface';
+
+
 const Styles = styled.div<PivotTableStylesProps>`
   ${({ height, width, margin }) => `
       margin: ${margin}px;
@@ -52,6 +57,12 @@ const Styles = styled.div<PivotTableStylesProps>`
         typeof width === 'string' ? parseInt(width, 10) : width - margin * 2
       }px;
  `}
+`;
+
+const SelectWrapper = styled.div`
+  select, .ant-select, .ant-select-selector {
+    min-width: 100px;
+  }
 `;
 
 const PivotTableWrapper = styled.div`
@@ -155,6 +166,8 @@ export default function PivotTableChart(props: PivotTableProps) {
     onContextMenu,
     timeGrainSqla,
     allowRenderHtml,
+    availableGroupbyRows,
+    availableGroupbyColumns,
   } = props;
 
   const theme = useTheme();
@@ -243,6 +256,11 @@ export default function PivotTableChart(props: PivotTableProps) {
     }),
     [metricNames],
   );
+
+    const [queryConfig, setQueryConfig] = useState({
+    selectedColumns: groupbyColumnsRaw,
+    selectedRows: groupbyRowsRaw,
+  });
 
   const [rows, cols] = useMemo(() => {
     let [rows_, cols_] = transposePivot
@@ -537,8 +555,53 @@ export default function PivotTableChart(props: PivotTableProps) {
     ],
   );
 
+  const updateTable = () => {
+    setDataMask({
+      ownState: queryConfig,
+    });
+  };
+
+  const handleChangeRow = (value: SelectValue, option: OptionData[]) => {
+    const selectedRows = option.map(v => v.row);
+    
+    setQueryConfig(prev => ({
+      ...prev,
+      selectedRows,
+    }));
+  };
+
+  const handleChangeColumn = (value: SelectValue, option: OptionData[]) => {
+    const selectedColumns = option.map(v => v.column);
+    
+    setQueryConfig(prev => ({
+      ...prev,
+      selectedColumns,
+    }));
+  };
+
+
   return (
     <Styles height={height} width={width} margin={theme.gridUnit * 4}>
+      <SelectWrapper>
+        <label>Rows</label>
+        
+        <Select mode="multiple" onChange={handleChangeRow} defaultValue={groupbyRows}>
+          {availableGroupbyRows.map(row =>(
+            <Select.Option value={getColumnLabel(row)} row={row}>{getColumnLabel(row)}</Select.Option>
+          ))}
+        </Select>
+
+        <label>Columns</label>
+        <Select mode="multiple" onChange={handleChangeColumn} defaultValue={groupbyColumns}>
+          {availableGroupbyColumns.map(column =>(
+            <Select.Option value={getColumnLabel(column)} column={column}>{getColumnLabel(column)}</Select.Option>
+          ))}
+        </Select>
+
+        <Button onClick={updateTable}>
+          Update
+        </Button>
+      </SelectWrapper>
       <PivotTableWrapper>
         <PivotTable
           data={unpivotedData}

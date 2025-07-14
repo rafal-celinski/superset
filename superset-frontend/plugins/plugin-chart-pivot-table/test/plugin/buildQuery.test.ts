@@ -22,7 +22,7 @@ import buildQuery from '../../src/plugin/buildQuery';
 import { PivotTableQueryFormData } from '../../src/types';
 
 const formData: PivotTableQueryFormData = {
-  groupbyRows: ['row1', 'row2'],
+  availableGroupbyRows: ['row1', 'row2'],
   groupbyColumns: ['col1', 'col2'],
   metrics: ['metric1', 'metric2'],
   tableRenderer: 'Table With Subtotal',

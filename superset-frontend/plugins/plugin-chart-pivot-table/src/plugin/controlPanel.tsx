@@ -62,6 +62,26 @@ const config: ControlPanelConfig = {
         ],
         [
           {
+            name: 'availableGroupbyColumns',
+            config: {
+              ...sharedControls.groupby,
+              label: t('available Columns'),
+              description: t('Columns to group by on the columns'),
+            },
+          },
+        ],
+        [
+          {
+            name: 'availableGroupbyRows',
+            config: {
+              ...sharedControls.groupby,
+              label: t('available Rows'),
+              description: t('Columns to group by on the rows'),
+            },
+          },
+        ],
+        [
+          {
             name: 'time_grain_sqla',
             config: {
               ...sharedControls.time_grain_sqla,

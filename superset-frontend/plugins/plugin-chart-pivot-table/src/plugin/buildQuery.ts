@@ -24,12 +24,15 @@ import {
   QueryFormColumn,
   QueryFormOrderBy,
 } from '@superset-ui/core';
-import { PivotTableQueryFormData } from '../types';
+import { PivotTableQueryFormData, Options} from '../types';
 
-export default function buildQuery(formData: PivotTableQueryFormData) {
-  const { groupbyColumns = [], groupbyRows = [], extra_form_data } = formData;
-  const time_grain_sqla =
-    extra_form_data?.time_grain_sqla || formData.time_grain_sqla;
+export default function buildQuery(formData: PivotTableQueryFormData, options: Options) {
+  const { extra_form_data } = formData;
+  const time_grain_sqla = extra_form_data?.time_grain_sqla || formData.time_grain_sqla;
+
+  const ownState = options?.ownState ?? {};
+  const groupbyColumns = ownState.selectedColumns ?? []
+  const groupbyRows = ownState.selectedRows ?? []
 
   // TODO: add deduping of AdhocColumns
   const columns = Array.from(

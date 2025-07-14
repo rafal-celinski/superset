@@ -81,6 +81,7 @@ export default function transformProps(chartProps: ChartProps<QueryFormData>) {
     filterState,
     datasource: { verboseMap = {}, columnFormats = {}, currencyFormats = {} },
     emitCrossFilters,
+    ownState,
   } = chartProps;
   const { data, colnames, coltypes } = queriesData[0];
   const {
@@ -106,9 +107,14 @@ export default function transformProps(chartProps: ChartProps<QueryFormData>) {
     timeGrainSqla,
     currencyFormat,
     allowRenderHtml,
+    availableGroupbyRows,
+    availableGroupbyColumns,
   } = formData;
   const { selectedFilters } = filterState;
   const granularity = extractTimegrain(rawFormData);
+
+  const selectedColumns = ownState.selectedColumns ?? []
+  const selectedRows = ownState.selectedRows ?? []
 
   const dateFormatters = colnames
     .filter(
@@ -147,8 +153,8 @@ export default function transformProps(chartProps: ChartProps<QueryFormData>) {
     width,
     height,
     data,
-    groupbyRows,
-    groupbyColumns,
+    groupbyRows: selectedRows,
+    groupbyColumns: selectedColumns,
     metrics,
     tableRenderer,
     colOrder,
@@ -176,5 +182,7 @@ export default function transformProps(chartProps: ChartProps<QueryFormData>) {
     onContextMenu,
     timeGrainSqla,
     allowRenderHtml,
+    availableGroupbyRows,
+    availableGroupbyColumns,
   };
 }
