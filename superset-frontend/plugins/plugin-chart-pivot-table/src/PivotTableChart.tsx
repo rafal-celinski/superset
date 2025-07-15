@@ -44,8 +44,8 @@ import {
   SelectedFiltersType,
 } from './types';
 
-// import Select from '@superset-ui/chart-controls/lib/components/Select'; 
 import {Button, Select} from 'antd'; 
+
 import { SelectValue } from 'antd-v5/es/select';
 import { OptionData} from 'rc-select/lib/interface';
 
@@ -564,14 +564,20 @@ export default function PivotTableChart(props: PivotTableProps) {
     ],
   );
 
+  const availableGroupbyColumns = [...new Set([...groupbyColumns, ...optionalGroupbyColumns])];
+  const availableGroupbyRows = [...new Set([...groupbyRows, ...optionalGroupbyRows, ])];
+
+  const labelToColumn = new Map(availableGroupbyColumns.map(col => [getColumnLabel(col), col]))
+  const labelToRow = new Map(availableGroupbyRows.map(row => [getColumnLabel(row), row]))
+
   const updateTable = () => {
     setDataMask({
       ownState: queryConfig,
     });
   };
 
-  const handleChangeRow = (value: SelectValue, option: OptionData[]) => {
-    const selectedGroupbyRows = option.map(v => v.row);
+  const handleChangeRow = (selectedValues: string[]) => {
+    const selectedGroupbyRows = selectedValues.map(v => labelToRow.get(v)!);
     
     setQueryConfig(prev => ({
       ...prev,
@@ -579,36 +585,23 @@ export default function PivotTableChart(props: PivotTableProps) {
     }));
   };
 
-  const handleChangeColumn = (value: SelectValue, option: OptionData[]) => {
-    const selectedGroupbyColumns = option.map(v => v.column);
-    
+  const handleChangeColumn = (selectedValues: string[]) => {
+    const selectedGroupbyColumns = selectedValues.map(v => labelToColumn.get(v)!);
+
     setQueryConfig(prev => ({
       ...prev,
       selectedGroupbyColumns,
     }));
   };
-
-  const availableGroupbyColumns = [...new Set([...optionalGroupbyColumns, ...groupbyColumns])];
-  const availableGroupbyRows = [...new Set([...optionalGroupbyRows, ...groupbyRows])];
   
-
   return (
     <Styles height={height} width={width} margin={theme.gridUnit * 4}>
       <SelectWrapper>
         <label>Rows</label>
-        
-        <Select mode="multiple" onChange={handleChangeRow} defaultValue={selectedGroupbyRows}>
-          {availableGroupbyRows.map(row =>(
-            <Select.Option value={getColumnLabel(row)} row={row}>{getColumnLabel(row)}</Select.Option>
-          ))}
-        </Select>
+        <Select mode="multiple" onChange={handleChangeRow} defaultValue={selectedGroupbyRows} options={availableGroupbyRows.map(row => ({value: getColumnLabel(row), label: getColumnLabel(row)}))}/>
 
         <label>Columns</label>
-        <Select mode="multiple" onChange={handleChangeColumn} defaultValue={selectedGroupbyColumns}>
-          {availableGroupbyColumns.map(column =>(
-            <Select.Option value={getColumnLabel(column)} column={column}>{getColumnLabel(column)}</Select.Option>
-          ))}
-        </Select>
+        <Select mode="multiple" onChange={handleChangeColumn} defaultValue={selectedGroupbyColumns} options={availableGroupbyColumns.map(column => ({value: getColumnLabel(column), label: getColumnLabel(column)}))}/>
 
         <Button onClick={updateTable}>
           Update
