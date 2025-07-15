@@ -113,8 +113,8 @@ export default function transformProps(chartProps: ChartProps<QueryFormData>) {
   const { selectedFilters } = filterState;
   const granularity = extractTimegrain(rawFormData);
 
-  // const selectedColumns = ownState.selectedColumns ?? []
-  // const selectedRows = ownState.selectedRows ?? []
+  const selectedGroupbyColumns = ownState.selectedGroupbyColumns ?? groupbyColumns;
+  const selectedGroupbyRows = ownState.selectedGroupbyRows ?? groupbyRows;
 
   const dateFormatters = colnames
     .filter(
@@ -184,6 +184,7 @@ export default function transformProps(chartProps: ChartProps<QueryFormData>) {
     allowRenderHtml,
     optionalGroupbyRows,
     optionalGroupbyColumns,
-    ownState,
+    selectedGroupbyRows,
+    selectedGroupbyColumns,
   };
 }

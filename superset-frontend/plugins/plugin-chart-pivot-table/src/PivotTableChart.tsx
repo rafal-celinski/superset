@@ -46,13 +46,6 @@ import {
 
 import {Button, Select} from 'antd'; 
 
-import { SelectValue } from 'antd-v5/es/select';
-import { OptionData} from 'rc-select/lib/interface';
-
-
-// import { DndColumnSelect } from '@superset-ui/chart-controls';
-
-
 const Styles = styled.div<PivotTableStylesProps>`
   ${({ height, width, margin }) => `
       margin: ${margin}px;
@@ -172,7 +165,8 @@ export default function PivotTableChart(props: PivotTableProps) {
     allowRenderHtml,
     optionalGroupbyRows,
     optionalGroupbyColumns,
-    ownState,
+    selectedGroupbyRows: selectedGroupbyRowsRaw,
+    selectedGroupbyColumns: selctedGroupbyColumnsRaw,
   } = props;
 
   const theme = useTheme();
@@ -247,9 +241,6 @@ export default function PivotTableChart(props: PivotTableProps) {
     [data, metricNames],
   );
   
-  const selctedGroupbyColumnsRaw = ownState.selectedGroupbyColumns ?? groupbyColumns;
-  const selectedGroupbyRowsRaw = ownState.selectedGroupbyRows ?? groupbyRows;
-
   const selectedGroupbyRows = useMemo(
     () => selectedGroupbyRowsRaw.map(getColumnLabel),
     [selectedGroupbyRowsRaw],

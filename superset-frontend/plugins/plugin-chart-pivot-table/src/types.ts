@@ -99,8 +99,11 @@ export type PivotTableQueryFormData = QueryFormData &
 export type PivotTableProps = PivotTableStylesProps &
   PivotTableCustomizeProps & {
     data: DataRecord[];
-  } &
-  Options;
+  } & {
+    selectedGroupbyRows: QueryFormColumn[];
+    selectedGroupbyColumns: QueryFormColumn[];
+  }
+  
 
 export interface Options {
   ownState: {
