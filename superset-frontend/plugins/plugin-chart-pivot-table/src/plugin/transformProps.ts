@@ -107,8 +107,8 @@ export default function transformProps(chartProps: ChartProps<QueryFormData>) {
     timeGrainSqla,
     currencyFormat,
     allowRenderHtml,
-    optionalGroupbyRows,
-    optionalGroupbyColumns,
+    optionalGroupbyRows = [],
+    optionalGroupbyColumns = [],
   } = formData;
   const { selectedFilters } = filterState;
   const granularity = extractTimegrain(rawFormData);

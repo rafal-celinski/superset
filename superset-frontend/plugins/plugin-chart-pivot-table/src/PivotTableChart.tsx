@@ -59,6 +59,10 @@ const Styles = styled.div<PivotTableStylesProps>`
 const SelectWrapper = styled.div`
   select, .ant-select, .ant-select-selector {
     min-width: 100px;
+    margin-right: 4px;
+  };
+  label {
+      margin: 8px;
   }
 `;
 
@@ -566,6 +570,15 @@ export default function PivotTableChart(props: PivotTableProps) {
       ownState: queryConfig,
     });
   };
+  
+  const resetTable = () => {
+    setDataMask({
+      ownState: {
+        selectedGroupbyRows: undefined,
+        selectedGroupbyColumns: undefined,
+      },
+    });
+  };
 
   const handleChangeRow = (selectedValues: string[]) => {
     const selectedGroupbyRows = selectedValues.map(v => labelToRow.get(v)!);
@@ -588,15 +601,18 @@ export default function PivotTableChart(props: PivotTableProps) {
   return (
     <Styles height={height} width={width} margin={theme.gridUnit * 4}>
       <SelectWrapper>
-        <label>Rows</label>
+        <label>{t('Group by:')}</label>
         <Select mode="multiple" onChange={handleChangeRow} defaultValue={selectedGroupbyRows} options={availableGroupbyRows.map(row => ({value: getColumnLabel(row), label: getColumnLabel(row)}))}/>
 
-        <label>Columns</label>
-        <Select mode="multiple" onChange={handleChangeColumn} defaultValue={selectedGroupbyColumns} options={availableGroupbyColumns.map(column => ({value: getColumnLabel(column), label: getColumnLabel(column)}))}/>
+        {/* <label>{t('Columns:')}</label>
+        <Select mode="multiple" onChange={handleChangeColumn} defaultValue={selectedGroupbyColumns} options={availableGroupbyColumns.map(column => ({value: getColumnLabel(column), label: getColumnLabel(column)}))}/> */}
 
         <Button onClick={updateTable}>
-          Update
+          Apply
         </Button>
+        {/* <Button onClick={resetTable}>
+          Reset
+        </Button> */}
       </SelectWrapper>
       <PivotTableWrapper>
         <PivotTable

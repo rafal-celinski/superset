@@ -60,16 +60,16 @@ const config: ControlPanelConfig = {
             },
           },
         ],
-        [
-          {
-            name: 'optionalGroupbyColumns',
-            config: {
-              ...sharedControls.groupby,
-              label: t('optional Columns'),
-              description: t('Columns to group by on the columns'),
-            },
-          },
-        ],
+        // [
+        //   {
+        //     name: 'optionalGroupbyColumns',
+        //     config: {
+        //       ...sharedControls.groupby,
+        //       label: t('optional Columns'),
+        //       description: t('Columns to group by on the columns'),
+        //     },
+        //   },
+        // ],
         [
           {
             name: 'optionalGroupbyRows',
@@ -95,7 +95,7 @@ const config: ControlPanelConfig = {
                 return [
                   ...ensureIsArray(controls?.groupbyColumns.value),
                   ...ensureIsArray(controls?.groupbyRows.value),
-                  ...ensureIsArray(controls?.optionalGroupbyColumns.value),
+                  // ...ensureIsArray(controls?.optionalGroupbyColumns.value),
                   ...ensureIsArray(controls?.optionalGroupbyRows.value),
                 ]
                   .map(selection => {
