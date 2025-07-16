@@ -90,6 +90,7 @@ interface PivotTableCustomizeProps {
   allowRenderHtml?: boolean;
   optionalGroupbyRows: QueryFormColumn[];
   optionalGroupbyColumns: QueryFormColumn[];
+  showTotals: boolean;
 }
 
 export type PivotTableQueryFormData = QueryFormData &
@@ -102,6 +103,8 @@ export type PivotTableProps = PivotTableStylesProps &
   } & {
     selectedGroupbyRows: QueryFormColumn[];
     selectedGroupbyColumns: QueryFormColumn[];
+  } & {
+    totals: DataRecord[];
   }
   
 

@@ -171,6 +171,7 @@ export default function PivotTableChart(props: PivotTableProps) {
     optionalGroupbyColumns,
     selectedGroupbyRows: selectedGroupbyRowsRaw,
     selectedGroupbyColumns: selctedGroupbyColumnsRaw,
+    totals,
   } = props;
 
   const theme = useTheme();
@@ -243,6 +244,24 @@ export default function PivotTableChart(props: PivotTableProps) {
         [],
       ),
     [data, metricNames],
+  );
+
+    const unpivotedTotals = useMemo(
+    () =>
+      totals.reduce(
+        (acc: Record<string, any>[], record: Record<string, any>) => [
+          ...acc,
+          ...metricNames
+            .map((name: string) => ({
+              ...record,
+              [METRIC_KEY]: name,
+              value: record[name],
+            }))
+            .filter(record => record.value !== null),
+        ],
+        [],
+      ),
+    [totals, metricNames],
   );
   
   const selectedGroupbyRows = useMemo(
@@ -604,8 +623,8 @@ export default function PivotTableChart(props: PivotTableProps) {
         <label>{t('Group by:')}</label>
         <Select mode="multiple" onChange={handleChangeRow} defaultValue={selectedGroupbyRows} options={availableGroupbyRows.map(row => ({value: getColumnLabel(row), label: getColumnLabel(row)}))}/>
 
-        {/* <label>{t('Columns:')}</label>
-        <Select mode="multiple" onChange={handleChangeColumn} defaultValue={selectedGroupbyColumns} options={availableGroupbyColumns.map(column => ({value: getColumnLabel(column), label: getColumnLabel(column)}))}/> */}
+        <label>{t('Columns:')}</label>
+        <Select mode="multiple" onChange={handleChangeColumn} defaultValue={selectedGroupbyColumns} options={availableGroupbyColumns.map(column => ({value: getColumnLabel(column), label: getColumnLabel(column)}))}/>
 
         <Button onClick={updateTable}>
           Apply
@@ -632,6 +651,7 @@ export default function PivotTableChart(props: PivotTableProps) {
           namesMapping={verboseMap}
           onContextMenu={handleContextMenu}
           allowRenderHtml={allowRenderHtml}
+          totals={unpivotedTotals}
         />
       </PivotTableWrapper>
     </Styles>

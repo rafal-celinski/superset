@@ -83,7 +83,7 @@ export default function transformProps(chartProps: ChartProps<QueryFormData>) {
     emitCrossFilters,
     ownState,
   } = chartProps;
-  const { data, colnames, coltypes } = queriesData[0];
+  
   const {
     groupbyRows,
     groupbyColumns,
@@ -109,12 +109,32 @@ export default function transformProps(chartProps: ChartProps<QueryFormData>) {
     allowRenderHtml,
     optionalGroupbyRows = [],
     optionalGroupbyColumns = [],
+    showTotals,
   } = formData;
   const { selectedFilters } = filterState;
   const granularity = extractTimegrain(rawFormData);
 
   const selectedGroupbyColumns = ownState.selectedGroupbyColumns ?? groupbyColumns;
   const selectedGroupbyRows = ownState.selectedGroupbyRows ?? groupbyRows;
+
+  let baseQuery;
+  let totalRowQuery;
+
+  
+  if (showTotals) {
+    [baseQuery, totalRowQuery] = queriesData;
+    // console.log(totalRowQuery);
+  } 
+  else {
+    [baseQuery] = queriesData;
+  }
+
+  const totals = showTotals && totalRowQuery?.data;
+
+  console.log('totals');
+  console.log(totals); 
+
+  const { data, colnames, coltypes } = baseQuery;
 
   const dateFormatters = colnames
     .filter(
@@ -186,5 +206,6 @@ export default function transformProps(chartProps: ChartProps<QueryFormData>) {
     optionalGroupbyColumns,
     selectedGroupbyRows,
     selectedGroupbyColumns,
+    totals,
   };
 }

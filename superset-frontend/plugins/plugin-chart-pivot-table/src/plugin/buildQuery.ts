@@ -23,6 +23,7 @@ import {
   isPhysicalColumn,
   QueryFormColumn,
   QueryFormOrderBy,
+  QueryObject,
 } from '@superset-ui/core';
 import { PivotTableQueryFormData, Options} from '../types';
 
@@ -66,12 +67,45 @@ export default function buildQuery(formData: PivotTableQueryFormData, options: O
     } else if (Array.isArray(metrics) && metrics[0]) {
       orderBy = [[metrics[0], !order_desc]];
     }
-    return [
-      {
-        ...baseQueryObject,
-        orderby: orderBy,
-        columns,
-      },
-    ];
+
+    let queryObject = {
+      ...baseQueryObject,
+      orderby: orderBy,
+      columns,
+    }
+    
+
+    const extra_columns = Array.from(
+    new Set([
+      ...ensureIsArray<QueryFormColumn>(selectedGroupbyRows),
+    ]),
+  ).map(col => {
+    if (
+      isPhysicalColumn(col) &&
+      time_grain_sqla &&
+      (formData?.temporal_columns_lookup?.[col] ||
+        formData.granularity_sqla === col)
+    ) {
+      return {
+        timeGrain: time_grain_sqla,
+        columnType: 'BASE_AXIS',
+        sqlExpression: col,
+        label: col,
+        expressionType: 'SQL',
+      } as AdhocColumn;
+    }
+    return col;
+  });
+    
+  const extraQueries: QueryObject[] = [];
+    if (formData.showTotals) {
+      extraQueries.push({
+        ...queryObject,
+        columns: extra_columns,
+        // metrics: [],
+      });
+    }
+    
+    return [queryObject, ...extraQueries];
   });
 }

@@ -177,6 +177,17 @@ const config: ControlPanelConfig = {
             },
           },
         ],
+        [
+          {
+            name: 'showTotals',
+            config: {
+              type: 'CheckboxControl',
+              label: t('Show totals'),
+              default: false,
+              description: t('Show totals'),
+            },
+          },
+        ],
       ],
     },
     {
