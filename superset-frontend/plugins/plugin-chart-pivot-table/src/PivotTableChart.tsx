@@ -171,7 +171,6 @@ export default function PivotTableChart(props: PivotTableProps) {
     optionalGroupbyColumns,
     selectedGroupbyRows: selectedGroupbyRowsRaw,
     selectedGroupbyColumns: selctedGroupbyColumnsRaw,
-    totals,
   } = props;
 
   const theme = useTheme();
@@ -246,24 +245,6 @@ export default function PivotTableChart(props: PivotTableProps) {
     [data, metricNames],
   );
 
-    const unpivotedTotals = useMemo(
-    () =>
-      totals.reduce(
-        (acc: Record<string, any>[], record: Record<string, any>) => [
-          ...acc,
-          ...metricNames
-            .map((name: string) => ({
-              ...record,
-              [METRIC_KEY]: name,
-              value: record[name],
-            }))
-            .filter(record => record.value !== null),
-        ],
-        [],
-      ),
-    [totals, metricNames],
-  );
-  
   const selectedGroupbyRows = useMemo(
     () => selectedGroupbyRowsRaw.map(getColumnLabel),
     [selectedGroupbyRowsRaw],
@@ -651,7 +632,6 @@ export default function PivotTableChart(props: PivotTableProps) {
           namesMapping={verboseMap}
           onContextMenu={handleContextMenu}
           allowRenderHtml={allowRenderHtml}
-          totals={unpivotedTotals}
         />
       </PivotTableWrapper>
     </Styles>

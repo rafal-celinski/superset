@@ -122,8 +122,13 @@ export class TableRenderer extends Component {
       rowPartialOnTop: rowSubtotalDisplay.displayOnTop,
       colPartialOnTop: colSubtotalDisplay.displayOnTop,
     });
+
+    console.log('pivotData');
+    console.log(pivotData);
+
     const rowKeys = pivotData.getRowKeys();
     const colKeys = pivotData.getColKeys();
+
 
     // Also pre-calculate all the callbacks for cells, etc... This is nice to have to
     // avoid re-calculations of the call-backs on cell expansions, etc...
@@ -188,7 +193,6 @@ export class TableRenderer extends Component {
       grandTotalCallback,
       namesMapping,
       allowRenderHtml: props.allowRenderHtml,
-      totals,
     };
   }
 
@@ -487,7 +491,7 @@ export class TableRenderer extends Component {
               true,
             )}
           >
-            {t('Subtotal')}
+            {t('Subtotal2')}
           </th>,
         );
       }
@@ -591,6 +595,9 @@ export class TableRenderer extends Component {
 
   renderTableRow(rowKey, rowIdx, pivotSettings) {
     // Render a single row in the pivot table.
+
+    console.log('--------------');
+    console.log(rowKey);
 
     const {
       rowAttrs,
@@ -700,7 +707,7 @@ export class TableRenderer extends Component {
             true,
           )}
         >
-          {t('Subtotal')}
+          {t('Subtotal1')}
         </th>
       ) : null;
 
@@ -831,9 +838,6 @@ export class TableRenderer extends Component {
       );
     });
 
-    console.log('pivotData');
-    console.log(pivotData);
-
     let grandTotalCell = null;
     if (rowTotals) {
       const agg = pivotData.getAggregator([], []);
@@ -857,103 +861,6 @@ export class TableRenderer extends Component {
       <tr key="total" className="pvtRowTotals">
         {totalCells}
       </tr>
-    );
-  }
-
-  renderMyTotalsRow(pivotSettings) {
-    // Render the final totals rows that has the totals for all the columns.
-
-    const {
-      rowAttrs,
-      colAttrs,
-      visibleColKeys,
-      rowTotals,
-      pivotData,
-      colTotalCallbacks,
-      grandTotalCallback,
-      totals,
-    } = pivotSettings;
-
-    const totalLabelCell = (
-      <th
-        key="label"
-        className="pvtTotalLabel pvtRowTotalLabel"
-        colSpan={rowAttrs.length + Math.min(colAttrs.length, 1)}
-        role="columnheader button"
-        onClick={this.clickHeaderHandler(
-          pivotData,
-          [],
-          this.props.rows,
-          0,
-          this.props.tableOptions.clickRowHeaderCallback,
-          false,
-          true,
-        )}
-      >
-        {t('Total')}
-      </th>
-    );
-
-
-    // console.log('totals');
-    // console.log(totals);
-    // console.log('pivotData');
-    // console.log(pivotData);
-
-
-    const totalValueCells = visibleColKeys.map(colKey => {
-      const flatColKey = flatKey(colKey);
-      // const agg = pivotData.getAggregator([], colKey);
-      // const aggValue = agg.value();
-
-      // const value = totals.filter(total => {
-      //   const dictValues = Object.values(total).map(value => String(value));
-      //   return colKey.every(val => dictValues.includes(val));
-      // })[0];
-
-      // console.log(colKey);
-      // console.log(flatColKey);
-
-
-
-      return (
-        <td
-          role="gridcell"
-          className="pvtTotal pvtRowTotal"
-          key={`total-${flatColKey}`}
-          onClick={colTotalCallbacks[flatColKey]}
-          onContextMenu={e => this.props.onContextMenu(e, colKey, undefined)}
-          style={{ padding: '5px' }}
-        >
-          123
-        </td>
-      );
-    });
-
-    let grandTotalCell = null;
-    if (rowTotals) {
-      const agg = pivotData.getAggregator([], []);
-      const aggValue = agg.value();
-      grandTotalCell = (
-        <td
-          role="gridcell"
-          key="total"
-          className="pvtGrandTotal pvtRowTotal"
-          onClick={grandTotalCallback}
-          onContextMenu={e => this.props.onContextMenu(e, undefined, undefined)}
-        >
-          {agg.format(aggValue)}
-        </td>
-      );
-    }
-
-    const totalCells = [totalLabelCell, ...totalValueCells, grandTotalCell];
-
-    return (
-      <tr key="mytotal" className="pvtRowTotals">
-        {totalCells}
-      </tr>
-
     );
   }
 
@@ -1031,7 +938,6 @@ export class TableRenderer extends Component {
               this.renderTableRow(r, i, pivotSettings),
             )}
             {colTotals && this.renderTotalsRow(pivotSettings)}
-            {/* {this.renderMyTotalsRow(pivotSettings)} */}
           </tbody>
         </table>
       </Styles>

@@ -23,7 +23,6 @@ import {
   isPhysicalColumn,
   QueryFormColumn,
   QueryFormOrderBy,
-  QueryObject,
 } from '@superset-ui/core';
 import { PivotTableQueryFormData, Options} from '../types';
 
@@ -36,28 +35,47 @@ export default function buildQuery(formData: PivotTableQueryFormData, options: O
   const selectedGroupbyRows = ownState.selectedGroupbyRows ?? groupbyRows;
 
   // TODO: add deduping of AdhocColumns
-  const columns = Array.from(
-    new Set([
-      ...ensureIsArray<QueryFormColumn>(selectedGroupbyColumns),
-      ...ensureIsArray<QueryFormColumn>(selectedGroupbyRows),
-    ]),
-  ).map(col => {
-    if (
-      isPhysicalColumn(col) &&
-      time_grain_sqla &&
-      (formData?.temporal_columns_lookup?.[col] ||
-        formData.granularity_sqla === col)
-    ) {
-      return {
-        timeGrain: time_grain_sqla,
-        columnType: 'BASE_AXIS',
-        sqlExpression: col,
-        label: col,
-        expressionType: 'SQL',
-      } as AdhocColumn;
-    }
-    return col;
-  });
+  
+  const rows_combinations: Array<QueryFormColumn[]> = [];
+  for (let i = 0; i <= selectedGroupbyRows.length; i++) {
+    rows_combinations.push(selectedGroupbyRows.slice(0, i));
+  }
+
+  const cols_combinations: Array<QueryFormColumn[]> = [];
+  for (let i = 0; i <= selectedGroupbyColumns.length; i++) {
+    cols_combinations.push(selectedGroupbyColumns.slice(0, i));
+  }
+
+  const combinations: Array<QueryFormColumn[]> = []
+
+  rows_combinations.forEach(row => {
+    cols_combinations.forEach(col => {
+      const combination = Array.from(
+          new Set([
+            ...ensureIsArray<QueryFormColumn>(row),
+            ...ensureIsArray<QueryFormColumn>(col),
+          ]),
+        ).map(col => {
+          if (
+            isPhysicalColumn(col) &&
+            time_grain_sqla &&
+            (formData?.temporal_columns_lookup?.[col] ||
+              formData.granularity_sqla === col)
+          ) {
+            return {
+              timeGrain: time_grain_sqla,
+              columnType: 'BASE_AXIS',
+              sqlExpression: col,
+              label: col,
+              expressionType: 'SQL',
+            } as AdhocColumn;
+          }
+          return col;
+        });
+        
+        combinations.push(combination);
+    })
+  })
 
   return buildQueryContext(formData, baseQueryObject => {
     const { series_limit_metric, metrics, order_desc } = baseQueryObject;
@@ -68,44 +86,14 @@ export default function buildQuery(formData: PivotTableQueryFormData, options: O
       orderBy = [[metrics[0], !order_desc]];
     }
 
-    let queryObject = {
-      ...baseQueryObject,
-      orderby: orderBy,
-      columns,
-    }
-    
-
-    const extra_columns = Array.from(
-    new Set([
-      ...ensureIsArray<QueryFormColumn>(selectedGroupbyRows),
-    ]),
-  ).map(col => {
-    if (
-      isPhysicalColumn(col) &&
-      time_grain_sqla &&
-      (formData?.temporal_columns_lookup?.[col] ||
-        formData.granularity_sqla === col)
-    ) {
+    let queryObjects = combinations.map(combination => {
       return {
-        timeGrain: time_grain_sqla,
-        columnType: 'BASE_AXIS',
-        sqlExpression: col,
-        label: col,
-        expressionType: 'SQL',
-      } as AdhocColumn;
-    }
-    return col;
-  });
-    
-  const extraQueries: QueryObject[] = [];
-    if (formData.showTotals) {
-      extraQueries.push({
-        ...queryObject,
-        columns: extra_columns,
-        // metrics: [],
-      });
-    }
-    
-    return [queryObject, ...extraQueries];
+        ...baseQueryObject,
+        orderby: orderBy,
+        columns: combination,
+      }
+    });
+
+    return queryObjects;
   });
 }

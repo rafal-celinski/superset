@@ -109,7 +109,6 @@ export default function transformProps(chartProps: ChartProps<QueryFormData>) {
     allowRenderHtml,
     optionalGroupbyRows = [],
     optionalGroupbyColumns = [],
-    showTotals,
   } = formData;
   const { selectedFilters } = filterState;
   const granularity = extractTimegrain(rawFormData);
@@ -117,24 +116,12 @@ export default function transformProps(chartProps: ChartProps<QueryFormData>) {
   const selectedGroupbyColumns = ownState.selectedGroupbyColumns ?? groupbyColumns;
   const selectedGroupbyRows = ownState.selectedGroupbyRows ?? groupbyRows;
 
-  let baseQuery;
-  let totalRowQuery;
-
+  const data = queriesData.flatMap(query => query.data);
   
-  if (showTotals) {
-    [baseQuery, totalRowQuery] = queriesData;
-    // console.log(totalRowQuery);
-  } 
-  else {
-    [baseQuery] = queriesData;
-  }
-
-  const totals = showTotals && totalRowQuery?.data;
-
-  console.log('totals');
-  console.log(totals); 
-
-  const { data, colnames, coltypes } = baseQuery;
+  // main query is the query with all columns -> with the longest colnames
+  const main_query = queriesData.reduce((main_query, query) => (query.colnames.length > main_query.colnames.length ? query : main_query));
+  const colnames = main_query.colnames;
+  const coltypes = main_query.coltypes;
 
   const dateFormatters = colnames
     .filter(
@@ -206,6 +193,5 @@ export default function transformProps(chartProps: ChartProps<QueryFormData>) {
     optionalGroupbyColumns,
     selectedGroupbyRows,
     selectedGroupbyColumns,
-    totals,
   };
 }
