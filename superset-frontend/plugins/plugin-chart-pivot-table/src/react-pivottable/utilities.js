@@ -737,95 +737,34 @@ class PivotData {
     // this code is called in a tight loop
     const colKey = [];
     const rowKey = [];
-    this.props.cols.some(col => {
+  
+    for (const col of this.props.cols) {
       if (col in record) {
         colKey.push(record[col]);
-        return false;
+      } else {
+        break;
       }
-      return true; 
-    });
-    this.props.rows.some(row => {
+    }
+
+    for (const row of this.props.rows) {
       if (row in record) {
         rowKey.push(record[row]);
-        return false;
+      } else {
+        break;
       }
-      return true;
-    });
-
-    console.log('-----------')
-    console.log(colKey);
-    console.log(rowKey);
-
-    // this.allTotal.push(record);
-
-    // const rowStart = this.subtotals.rowEnabled ? 1 : Math.max(1, rowKey.length);
-    // const colStart = this.subtotals.colEnabled ? 1 : Math.max(1, colKey.length);
-
-    // let isRowSubtotal;
-    // let isColSubtotal;
-    // for (let ri = rowStart; ri <= rowKey.length; ri += 1) {
-    //   isRowSubtotal = ri < rowKey.length;
-    //   const fRowKey = rowKey.slice(0, ri);
-    //   const flatRowKey = flatKey(fRowKey);
-    //   if (!this.rowTotals[flatRowKey]) {
-    //     this.rowKeys.push(fRowKey);
-    //     this.rowTotals[flatRowKey] = this.getFormattedAggregator(
-    //       record,
-    //       rowKey,
-    //     )(this, fRowKey, []);
-    //   }
-    //   this.rowTotals[flatRowKey].push(record);
-    //   this.rowTotals[flatRowKey].isSubtotal = isRowSubtotal;
-    // }
-
-    // for (let ci = colStart; ci <= colKey.length; ci += 1) {
-    //   isColSubtotal = ci < colKey.length;
-    //   const fColKey = colKey.slice(0, ci);
-    //   const flatColKey = flatKey(fColKey);
-    //   if (!this.colTotals[flatColKey]) {
-    //     this.colKeys.push(fColKey);
-    //     this.colTotals[flatColKey] = this.getFormattedAggregator(
-    //       record,
-    //       colKey,
-    //     )(this, [], fColKey);
-    //   }
-    //   this.colTotals[flatColKey].push(record);
-    //   this.colTotals[flatColKey].isSubtotal = isColSubtotal;
-    // }
-
-    // // And now fill in for all the sub-cells.
-    // for (let ri = rowStart; ri <= rowKey.length; ri += 1) {
-    //   isRowSubtotal = ri < rowKey.length;
-    //   const fRowKey = rowKey.slice(0, ri);
-    //   const flatRowKey = flatKey(fRowKey);
-    //   if (!this.tree[flatRowKey]) {
-    //     this.tree[flatRowKey] = {};
-    //   }
-    //   for (let ci = colStart; ci <= colKey.length; ci += 1) {
-    //     isColSubtotal = ci < colKey.length;
-    //     const fColKey = colKey.slice(0, ci);
-    //     const flatColKey = flatKey(fColKey);
-    //     if (!this.tree[flatRowKey][flatColKey]) {
-    //       this.tree[flatRowKey][flatColKey] = this.getFormattedAggregator(
-    //         record,
-    //       )(this, fRowKey, fColKey);
-    //     }
-    //     this.tree[flatRowKey][flatColKey].push(record);
-
-    //     this.tree[flatRowKey][flatColKey].isRowSubtotal = isRowSubtotal;
-    //     this.tree[flatRowKey][flatColKey].isColSubtotal = isColSubtotal;
-    //     this.tree[flatRowKey][flatColKey].isSubtotal =
-    //       isRowSubtotal || isColSubtotal;
-    //   }
-    // }
+    }
 
     const flatRowKey = flatKey(rowKey);
     const flatColKey = flatKey(colKey);
 
-    if ((!this.colTotals[flatColKey]) && colKey.length > 0) {
-      if (colKey.length === this.props.cols.length) {
+    let isColSubtotal = colKey.length < this.props.cols.length;
+    let isRowSubtotal = rowKey.length < this.props.rows.length;
+
+    if (!this.colTotals[flatColKey] && colKey.length > 0) {
+      if (!isColSubtotal || this.subtotals.colEnabled) {
         this.colKeys.push(colKey);
       }
+
       this.colTotals[flatColKey] = this.getFormattedAggregator(
         record,
         colKey,
@@ -833,7 +772,7 @@ class PivotData {
     }
 
     if ((!this.rowTotals[flatRowKey]) && rowKey.length > 0) {
-      if (rowKey.length === this.props.rows.length) {
+      if (!isRowSubtotal || this.subtotals.rowEnabled) {
         this.rowKeys.push(rowKey);
       }
       
@@ -856,18 +795,19 @@ class PivotData {
       } 
     }
     
+
     
     if (rowKey.length === 0 && colKey.length === 0) {
       this.allTotal.push(record);
     } else if (rowKey.length === 0) {
       this.colTotals[flatColKey].push(record);
-      this.colTotals[flatColKey].isSubtotal = colKey.length < this.props.cols.length;
+      this.colTotals[flatColKey].isSubtotal = isColSubtotal;
     } else if (colKey.length === 0) {
       this.rowTotals[flatRowKey].push(record);
-      this.rowTotals[flatRowKey].isSubtotal = rowKey.length < this.props.rows.length;
+      this.rowTotals[flatRowKey].isSubtotal = isRowSubtotal;
     } else {
       this.tree[flatRowKey][flatColKey].push(record);
-      this.tree[flatRowKey][flatColKey].isSubtotal = colKey.length < this.props.cols.length || rowKey.length < this.props.rows.length;
+      this.tree[flatRowKey][flatColKey].isSubtotal = isRowSubtotal || isColSubtotal;
     }
 
   }
