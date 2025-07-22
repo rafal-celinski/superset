@@ -596,8 +596,8 @@ export class TableRenderer extends Component {
   renderTableRow(rowKey, rowIdx, pivotSettings) {
     // Render a single row in the pivot table.
 
-    console.log('--------------');
-    console.log(rowKey);
+    // console.log('--------------');
+    // console.log(rowKey);
 
     const {
       rowAttrs,

@@ -77,6 +77,9 @@ export default function buildQuery(formData: PivotTableQueryFormData, options: O
     })
   })
 
+  // console.log('combinations');
+  // console.log(combinations);
+
   return buildQueryContext(formData, baseQueryObject => {
     const { series_limit_metric, metrics, order_desc } = baseQueryObject;
     let orderBy: QueryFormOrderBy[] | undefined;

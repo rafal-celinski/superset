@@ -737,16 +737,24 @@ class PivotData {
     // this code is called in a tight loop
     const colKey = [];
     const rowKey = [];
-    this.props.cols.forEach(col => {
+    this.props.cols.some(col => {
       if (col in record) {
         colKey.push(record[col]);
+        return false;
       }
+      return true; 
     });
-    this.props.rows.forEach(row => {
+    this.props.rows.some(row => {
       if (row in record) {
         rowKey.push(record[row]);
+        return false;
       }
+      return true;
     });
+
+    console.log('-----------')
+    console.log(colKey);
+    console.log(rowKey);
 
     // this.allTotal.push(record);
 
@@ -815,7 +823,9 @@ class PivotData {
     const flatColKey = flatKey(colKey);
 
     if ((!this.colTotals[flatColKey]) && colKey.length > 0) {
-      this.colKeys.push(colKey);
+      if (colKey.length === this.props.cols.length) {
+        this.colKeys.push(colKey);
+      }
       this.colTotals[flatColKey] = this.getFormattedAggregator(
         record,
         colKey,
@@ -823,7 +833,10 @@ class PivotData {
     }
 
     if ((!this.rowTotals[flatRowKey]) && rowKey.length > 0) {
-      this.rowKeys.push(rowKey);
+      if (rowKey.length === this.props.rows.length) {
+        this.rowKeys.push(rowKey);
+      }
+      
       this.rowTotals[flatRowKey] = this.getFormattedAggregator(
         record,
         rowKey,
@@ -854,6 +867,7 @@ class PivotData {
       this.rowTotals[flatRowKey].isSubtotal = rowKey.length < this.props.rows.length;
     } else {
       this.tree[flatRowKey][flatColKey].push(record);
+      this.tree[flatRowKey][flatColKey].isSubtotal = colKey.length < this.props.cols.length || rowKey.length < this.props.rows.length;
     }
 
   }
