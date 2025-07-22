@@ -30,12 +30,11 @@ import {
   isAdhocColumn,
   isFeatureEnabled,
   isPhysicalColumn,
-  NumberFormatter,
   styled,
   t,
   useTheme,
 } from '@superset-ui/core';
-import { aggregatorTemplates, PivotTable, sortAs } from './react-pivottable';
+import {PivotTable, sortAs } from './react-pivottable';
 import {
   FilterType,
   MetricsLayoutEnum,
@@ -85,51 +84,6 @@ const StyledMinusSquareOutlined = styled(MinusSquareOutlined)`
   stroke-width: 16px;
 `;
 
-// const aggregatorsFactory = (formatter: NumberFormatter) => ({
-//   Count: aggregatorTemplates.count(formatter),
-//   'Count Unique Values': aggregatorTemplates.countUnique(formatter),
-//   'List Unique Values': aggregatorTemplates.listUnique(', ', formatter),
-//   Sum: aggregatorTemplates.sum(formatter),
-//   Average: aggregatorTemplates.average(formatter),
-//   Median: aggregatorTemplates.median(formatter),
-//   'Sample Variance': aggregatorTemplates.var(1, formatter),
-//   'Sample Standard Deviation': aggregatorTemplates.stdev(1, formatter),
-//   Minimum: aggregatorTemplates.min(formatter),
-//   Maximum: aggregatorTemplates.max(formatter),
-//   First: aggregatorTemplates.first(formatter),
-//   Last: aggregatorTemplates.last(formatter),
-//   'Sum as Fraction of Total': aggregatorTemplates.fractionOf(
-//     aggregatorTemplates.sum(),
-//     'total',
-//     formatter,
-//   ),
-//   'Sum as Fraction of Rows': aggregatorTemplates.fractionOf(
-//     aggregatorTemplates.sum(),
-//     'row',
-//     formatter,
-//   ),
-//   'Sum as Fraction of Columns': aggregatorTemplates.fractionOf(
-//     aggregatorTemplates.sum(),
-//     'col',
-//     formatter,
-//   ),
-//   'Count as Fraction of Total': aggregatorTemplates.fractionOf(
-//     aggregatorTemplates.count(),
-//     'total',
-//     formatter,
-//   ),
-//   'Count as Fraction of Rows': aggregatorTemplates.fractionOf(
-//     aggregatorTemplates.count(),
-//     'row',
-//     formatter,
-//   ),
-//   'Count as Fraction of Columns': aggregatorTemplates.fractionOf(
-//     aggregatorTemplates.count(),
-//     'col',
-//     formatter,
-//   ),
-// });
-
 /* If you change this logic, please update the corresponding Python
  * function (https://github.com/apache/superset/blob/master/superset/charts/post_processing.py),
  * or reach out to @betodealmeida.
@@ -144,7 +98,6 @@ export default function PivotTableChart(props: PivotTableProps) {
     metrics,
     colOrder,
     rowOrder,
-    // aggregateFunction,
     transposePivot,
     combineMetric,
     rowSubtotalPosition,
@@ -244,6 +197,8 @@ export default function PivotTableChart(props: PivotTableProps) {
       ),
     [data, metricNames],
   );
+
+  console.log(unpivotedData);
 
   const selectedGroupbyRows = useMemo(
     () => selectedGroupbyRowsRaw.map(getColumnLabel),
@@ -619,10 +574,8 @@ export default function PivotTableChart(props: PivotTableProps) {
           data={unpivotedData}
           rows={rows}
           cols={cols}
-          // aggregatorsFactory={aggregatorsFactory}
           defaultFormatter={defaultFormatter}
           customFormatters={metricFormatters}
-          // aggregatorName={aggregateFunction}
           vals={vals}
           colOrder={colOrder}
           rowOrder={rowOrder}

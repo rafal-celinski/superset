@@ -585,12 +585,6 @@ export class TableRenderer extends Component {
             true,
           )}
         >
-          {/* {colAttrs.length === 0
-            ? t('Total (%(aggregatorName)s)', {
-                aggregatorName: t(this.props.aggregatorName),
-              })
-            : null} */}
-
           {colAttrs.length === 0 ? t('Total') : null}
         </th>
       </tr>
@@ -599,10 +593,6 @@ export class TableRenderer extends Component {
 
   renderTableRow(rowKey, rowIdx, pivotSettings) {
     // Render a single row in the pivot table.
-
-    // console.log('--------------');
-    // console.log(rowKey);
-
     const {
       rowAttrs,
       colAttrs,
@@ -817,10 +807,6 @@ export class TableRenderer extends Component {
           true,
         )}
       >
-        {/* {t('Total (%(aggregatorName)s)', {
-          aggregatorName: t(this.props.aggregatorName),
-        })} */}
-
         {t('Total')}
       </th>
     );
