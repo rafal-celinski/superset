@@ -24,59 +24,51 @@ import {
   QueryFormColumn,
   QueryFormOrderBy,
 } from '@superset-ui/core';
-import { PivotTableQueryFormData, Options} from '../types';
+import { PivotTableQueryFormData, Options, Combination} from '../types';
+import getRowsColumnsCombinations from './utilities';
 
 export default function buildQuery(formData: PivotTableQueryFormData, options: Options) {
-  const {groupbyColumns = [], groupbyRows = [], extra_form_data } = formData;
+  const {groupbyColumns = [], groupbyRows = [], extra_form_data, combineMetric} = formData;
   const time_grain_sqla = extra_form_data?.time_grain_sqla || formData.time_grain_sqla;
 
   const ownState = options?.ownState ?? {};
-  const selectedGroupbyColumns = ownState.selectedGroupbyColumns ?? groupbyColumns;
+  // const selectedGroupbyColumns = ownState.selectedGroupbyColumns ?? groupbyColumns;
+  const selectedGroupbyColumns = groupbyColumns;
   const selectedGroupbyRows = ownState.selectedGroupbyRows ?? groupbyRows;
 
   // TODO: add deduping of AdhocColumns
   
-  const rows_combinations: Array<QueryFormColumn[]> = [];
-  for (let i = 0; i <= selectedGroupbyRows.length; i++) {
-    rows_combinations.push(selectedGroupbyRows.slice(0, i));
+  let rowsColumnsCombinations: Combination[] = getRowsColumnsCombinations(selectedGroupbyRows, selectedGroupbyColumns);
+
+  if (combineMetric) {
+    rowsColumnsCombinations = rowsColumnsCombinations.filter(combination => combination.columns.length !== 0)
   }
 
-  const cols_combinations: Array<QueryFormColumn[]> = [];
-  for (let i = 0; i <= selectedGroupbyColumns.length; i++) {
-    cols_combinations.push(selectedGroupbyColumns.slice(0, i));
-  }
-
-  const combinations: Array<QueryFormColumn[]> = []
-
-  rows_combinations.forEach(row => {
-    cols_combinations.forEach(col => {
-      const combination = Array.from(
-          new Set([
-            ...ensureIsArray<QueryFormColumn>(row),
-            ...ensureIsArray<QueryFormColumn>(col),
-          ]),
-        ).map(col => {
-          if (
-            isPhysicalColumn(col) &&
-            time_grain_sqla &&
-            (formData?.temporal_columns_lookup?.[col] ||
-              formData.granularity_sqla === col)
-          ) {
-            return {
-              timeGrain: time_grain_sqla,
-              columnType: 'BASE_AXIS',
-              sqlExpression: col,
-              label: col,
-              expressionType: 'SQL',
-            } as AdhocColumn;
-          }
-          return col;
-        });
-        
-        combinations.push(combination);
-    })
+  const queries_columns: Array<QueryFormColumn[]> = rowsColumnsCombinations.map(combination => {
+    return Array.from(
+      new Set([
+        ...ensureIsArray<QueryFormColumn>(combination.rows),
+        ...ensureIsArray<QueryFormColumn>(combination.columns),
+      ])
+    ).map(col => {
+      if (
+        isPhysicalColumn(col) &&
+        time_grain_sqla &&
+        (formData?.temporal_columns_lookup?.[col] ||
+          formData.granularity_sqla === col)
+      ) {
+        return {
+          timeGrain: time_grain_sqla,
+          columnType: 'BASE_AXIS',
+          sqlExpression: col,
+          label: col,
+          expressionType: 'SQL',
+        } as AdhocColumn;
+      }
+      return col;
+    });
   })
-
+  
   return buildQueryContext(formData, baseQueryObject => {
     const { series_limit_metric, metrics, order_desc } = baseQueryObject;
     let orderBy: QueryFormOrderBy[] | undefined;
@@ -86,11 +78,11 @@ export default function buildQuery(formData: PivotTableQueryFormData, options: O
       orderBy = [[metrics[0], !order_desc]];
     }
 
-    let queryObjects = combinations.map(combination => {
+    let queryObjects = queries_columns.map(columns => {
       return {
         ...baseQueryObject,
         orderby: orderBy,
-        columns: combination,
+        columns: columns,
       }
     });
 

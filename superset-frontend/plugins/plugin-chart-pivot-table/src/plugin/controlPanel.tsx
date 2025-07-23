@@ -255,7 +255,7 @@ const config: ControlPanelConfig = {
                 'Display metrics side by side within each column, as ' +
                   'opposed to each column being displayed side by side for each metric.',
               ),
-              renderTrigger: true,
+              // renderTrigger: true,
             },
           },
         ],

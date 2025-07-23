@@ -98,10 +98,11 @@ export type PivotTableQueryFormData = QueryFormData &
 
 export type PivotTableProps = PivotTableStylesProps &
   PivotTableCustomizeProps & {
-    data: DataRecord[];
+    data: Array<DataRecord[]>;
   } & {
     selectedGroupbyRows: QueryFormColumn[];
     selectedGroupbyColumns: QueryFormColumn[];
+    rowsColumnsCombinations: Combination[];
   };
   
 
@@ -110,4 +111,9 @@ export interface Options {
     selectedGroupbyRows: QueryFormColumn[];
     selectedGroupbyColumns: QueryFormColumn[];
   }
+}
+
+export interface Combination {
+  rows: QueryFormColumn[],
+  columns: QueryFormColumn[],
 }

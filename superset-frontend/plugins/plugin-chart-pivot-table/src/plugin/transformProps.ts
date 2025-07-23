@@ -28,7 +28,8 @@ import {
   TimeFormats,
 } from '@superset-ui/core';
 import { getColorFormatters } from '@superset-ui/chart-controls';
-import { DateFormatter } from '../types';
+import { DateFormatter, Combination } from '../types';
+import getRowsColumnsCombinations from './utilities';
 
 const { DATABASE_DATETIME } = TimeFormats;
 
@@ -112,10 +113,17 @@ export default function transformProps(chartProps: ChartProps<QueryFormData>) {
   const { selectedFilters } = filterState;
   const granularity = extractTimegrain(rawFormData);
 
-  const selectedGroupbyColumns = ownState.selectedGroupbyColumns ?? groupbyColumns;
+  // const selectedGroupbyColumns = ownState.selectedGroupbyColumns ?? groupbyColumns;
+  const selectedGroupbyColumns = groupbyColumns;
   const selectedGroupbyRows = ownState.selectedGroupbyRows ?? groupbyRows;
+  
+  let rowsColumnsCombinations: Combination[] = getRowsColumnsCombinations(selectedGroupbyRows, selectedGroupbyColumns);
 
-  const data = queriesData.flatMap(query => query.data);
+  if (combineMetric) {
+    rowsColumnsCombinations = rowsColumnsCombinations.filter(combination => combination.columns.length !== 0)
+  }
+
+  const data = queriesData.map(query => query.data);
   
   // main query is the query with all columns -> with the longest colnames
   const main_query = queriesData.reduce((main_query, query) => (query.colnames.length > main_query.colnames.length ? query : main_query));
@@ -191,5 +199,6 @@ export default function transformProps(chartProps: ChartProps<QueryFormData>) {
     optionalGroupbyColumns,
     selectedGroupbyRows,
     selectedGroupbyColumns,
+    rowsColumnsCombinations,
   };
 }

@@ -19,6 +19,7 @@
 
 import PropTypes from 'prop-types';
 import { t } from '@superset-ui/core';
+import { MetricsLayoutEnum } from '../types'
 
 const addSeparators = function (nStr, thousandsSep, decimalSep) {
   const x = String(nStr).split('.');
@@ -330,8 +331,13 @@ class PivotData {
     this.subtotals = subtotals;
     this.sorted = false;
 
-    // iterate through input, accumulating data for cells
-    PivotData.forEachRecord(this.props.data, this.processRecord);
+    
+    
+    // iterate through input, putting data for cells
+    const dataLength = Math.min(this.props.data.length, this.props.rowsColumnsCombinations.length);
+    for (let i = 0; i < dataLength; i++) {
+      PivotData.forEachRecord(this.props.data[i], this.props.rowsColumnsCombinations[i], this.processRecord);
+    }
   }
 
   getFormattedAggregator(record, totalsKeys) {
@@ -420,12 +426,13 @@ class PivotData {
     return this.rowKeys;
   }
 
-  processRecord(record) {
+  processRecord(record, rowsColumnsCombination) {
     // this code is called in a tight loop
     const colKey = [];
     const rowKey = [];
-  
-    for (const col of this.props.cols) {
+
+    // teraz moze zadziałąć oryginalne ?
+    for (const col of rowsColumnsCombination.columns) {
       if (col in record) {
         colKey.push(record[col]);
       } else {
@@ -433,7 +440,7 @@ class PivotData {
       }
     }
 
-    for (const row of this.props.rows) {
+    for (const row of rowsColumnsCombination.rows) {
       if (row in record) {
         rowKey.push(record[row]);
       } else {
@@ -443,13 +450,6 @@ class PivotData {
 
     const flatRowKey = flatKey(rowKey);
     const flatColKey = flatKey(colKey);
-
-    if (colKey.length === 0) {
-      console.log('----------------');
-      console.log(record);
-      console.log(flatColKey);
-      console.log(flatRowKey);
-    }
 
     let isColSubtotal = colKey.length < this.props.cols.length;
     let isRowSubtotal = rowKey.length < this.props.rows.length;
@@ -533,10 +533,10 @@ class PivotData {
 }
 
 // can handle arrays or jQuery selections of tables
-PivotData.forEachRecord = function (input, processRecord) {
-  if (Array.isArray(input)) {
+PivotData.forEachRecord = function (data, rowColumnCombination, processRecord) {
+  if (Array.isArray(data)) {
     // array of objects
-    return input.map(record => processRecord(record));
+    return data.map(record => processRecord(record, rowColumnCombination));
   }
   throw new Error(t('Unknown input format'));
 };

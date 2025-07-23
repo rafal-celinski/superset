@@ -123,9 +123,6 @@ export class TableRenderer extends Component {
       colPartialOnTop: colSubtotalDisplay.displayOnTop,
     });
 
-    console.log('pivotData');
-    console.log(pivotData);
-
     const rowKeys = pivotData.getRowKeys();
     const colKeys = pivotData.getColKeys();
 
