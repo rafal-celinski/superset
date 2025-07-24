@@ -331,8 +331,6 @@ class PivotData {
     this.subtotals = subtotals;
     this.sorted = false;
 
-    
-    
     // iterate through input, putting data for cells
     const dataLength = Math.min(this.props.data.length, this.props.rowsColumnsCombinations.length);
     for (let i = 0; i < dataLength; i++) {
@@ -542,11 +540,9 @@ PivotData.forEachRecord = function (data, rowColumnCombination, processRecord) {
 };
 
 PivotData.defaultProps = {
-  // aggregators,
   cols: [],
   rows: [],
   vals: [],
-  aggregatorName: 'Count',
   sorters: {},
   rowOrder: 'key_a_to_z',
   colOrder: 'key_a_to_z',
@@ -555,7 +551,6 @@ PivotData.defaultProps = {
 PivotData.propTypes = {
   data: PropTypes.oneOfType([PropTypes.array, PropTypes.object, PropTypes.func])
     .isRequired,
-  aggregatorName: PropTypes.string,
   cols: PropTypes.arrayOf(PropTypes.string),
   rows: PropTypes.arrayOf(PropTypes.string),
   vals: PropTypes.arrayOf(PropTypes.string),

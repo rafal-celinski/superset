@@ -105,7 +105,6 @@ export type PivotTableProps = PivotTableStylesProps &
     rowsColumnsCombinations: Combination[];
   };
   
-
 export interface Options {
   ownState: {
     selectedGroupbyRows: QueryFormColumn[];

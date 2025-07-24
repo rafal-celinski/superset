@@ -85,8 +85,6 @@ export class TableRenderer extends Component {
     const colAttrs = props.cols;
     const rowAttrs = props.rows;
 
-    const totals = props.totals;
-
     const tableOptions = {
       rowTotals: true,
       colTotals: true,
@@ -122,10 +120,8 @@ export class TableRenderer extends Component {
       rowPartialOnTop: rowSubtotalDisplay.displayOnTop,
       colPartialOnTop: colSubtotalDisplay.displayOnTop,
     });
-
     const rowKeys = pivotData.getRowKeys();
     const colKeys = pivotData.getColKeys();
-
 
     // Also pre-calculate all the callbacks for cells, etc... This is nice to have to
     // avoid re-calculations of the call-backs on cell expansions, etc...
@@ -513,10 +509,6 @@ export class TableRenderer extends Component {
             true,
           )}
         >
-          {/* {t('Total (%(aggregatorName)s)', {
-            aggregatorName: t(this.props.aggregatorName),
-          })} */}
-
           {t('Total')}
         </th>
       ) : null;
@@ -590,6 +582,7 @@ export class TableRenderer extends Component {
 
   renderTableRow(rowKey, rowIdx, pivotSettings) {
     // Render a single row in the pivot table.
+
     const {
       rowAttrs,
       colAttrs,
