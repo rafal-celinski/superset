@@ -1,10 +1,10 @@
 import { QueryFormColumn } from '@superset-ui/core';
 import { MetricsLayoutEnum, OwnState, PivotTableQueryFormData } from '../types';
 
-export default function buildGroupbyCombinations(formData: PivotTableQueryFormData, ownState: OwnState) {
+export default function buildGroupbyCombinations(formData: PivotTableQueryFormData, ownState?: OwnState) {
     // const selectedGroupbyColumns = ownState.selectedGroupbyColumns ?? groupbyColumns;
     let columns = formData.groupbyColumns;
-    let rows = ownState.selectedGroupbyRows ?? formData.groupbyRows;
+    let rows = ownState?.selectedGroupbyRows ?? formData.groupbyRows;
 
     [rows, columns] = formData.transposePivot ? [columns, rows] : [rows, columns];
 

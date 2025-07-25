@@ -30,7 +30,6 @@ import {
 import { getColorFormatters } from '@superset-ui/chart-controls';
 import { DateFormatter, PivotTableQueryFormData, OwnState, QueryData} from '../types';
 import buildGroupbyCombinations from './utilities';
-import { MatchingBraceOutdent } from 'ace-builds-internal/mode/matching_brace_outdent';
 
 const { DATABASE_DATETIME } = TimeFormats;
 
@@ -201,8 +200,6 @@ export default function transformProps(chartProps: ChartProps<QueryFormData>) {
     onContextMenu,
     timeGrainSqla,
     allowRenderHtml,
-    optionalGroupbyRows,
-    optionalGroupbyColumns,
     selectedGroupbyRows,
     selectedGroupbyColumns,
     availableGroupbyRows,

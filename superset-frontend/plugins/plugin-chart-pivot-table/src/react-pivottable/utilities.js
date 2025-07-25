@@ -280,12 +280,12 @@ const flatKey = attrVals => attrVals.join(String.fromCharCode(0));
     return function ([attr]) {
       return function () {
         return {
-          sum: 0,
+          val: 0,
           push(record) {
-            this.sum = record[attr];
+            this.val = record[attr];
           },
           value() {
-            return this.sum;
+            return this.val;
           },
           format: fmtNonString(formatter),
           numInputs: typeof attr !== 'undefined' ? 0 : 1,
@@ -425,22 +425,12 @@ class PivotData {
     // this code is called in a tight loop
     const colKey = [];
     const rowKey = [];
-
-    for (const col of record.columns) {
-      if (col in record) {
-        colKey.push(record[col]);
-      } else {
-        break;
-      }
-    }
-
-    for (const row of record.rows) {
-      if (row in record) {
-        rowKey.push(record[row]);
-      } else {
-        break;
-      }
-    }
+    record.columns.forEach(col => {
+      colKey.push(col in record ? record[col] : 'null');
+    });
+    record.rows.forEach(row => {
+      rowKey.push(row in record ? record[row] : 'null');
+    });
 
     const flatRowKey = flatKey(rowKey);
     const flatColKey = flatKey(colKey);

@@ -53,7 +53,7 @@ function getQueryColumns(groupby: Groupby, formData: PivotTableQueryFormData, ti
     });
 }
 
-export default function buildQuery(formData: PivotTableQueryFormData, options: Options) {
+export default function buildQuery(formData: PivotTableQueryFormData, options?: Options) {
   const {extra_form_data} = formData;
   const time_grain_sqla = extra_form_data?.time_grain_sqla || formData.time_grain_sqla;
 
@@ -74,7 +74,7 @@ export default function buildQuery(formData: PivotTableQueryFormData, options: O
       return {
         ...baseQueryObject,
         orderby: orderBy,
-        columns
+        columns,
       }
     });
 
