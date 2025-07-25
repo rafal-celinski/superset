@@ -28,8 +28,9 @@ import {
   TimeFormats,
 } from '@superset-ui/core';
 import { getColorFormatters } from '@superset-ui/chart-controls';
-import { DateFormatter, Combination } from '../types';
-import getRowsColumnsCombinations from './utilities';
+import { DateFormatter, PivotTableQueryFormData, OwnState, QueryData} from '../types';
+import buildGroupbyCombinations from './utilities';
+import { MatchingBraceOutdent } from 'ace-builds-internal/mode/matching_brace_outdent';
 
 const { DATABASE_DATETIME } = TimeFormats;
 
@@ -113,22 +114,27 @@ export default function transformProps(chartProps: ChartProps<QueryFormData>) {
   const { selectedFilters } = filterState;
   const granularity = extractTimegrain(rawFormData);
 
-  // const selectedGroupbyColumns = ownState.selectedGroupbyColumns ?? groupbyColumns;
-  const selectedGroupbyColumns = groupbyColumns;
-  const selectedGroupbyRows = ownState.selectedGroupbyRows ?? groupbyRows;
-  
-  let rowsColumnsCombinations: Combination[] = getRowsColumnsCombinations(selectedGroupbyRows, selectedGroupbyColumns);
+  const availableGroupbyColumns = [...new Set([...groupbyColumns, ...optionalGroupbyColumns])];
+  const availableGroupbyRows = [...new Set([...groupbyRows, ...optionalGroupbyRows])];
 
-  if (combineMetric) {
-    rowsColumnsCombinations = rowsColumnsCombinations.filter(combination => combination.columns.length !== 0)
+  const selectedGroupbyRows = ownState.selectedGroupbyRows ?? groupbyRows;
+  const selectedGroupbyColumns = ownState.selectedGroupbyColumns ?? groupbyColumns;
+  const groupbyCombinations = buildGroupbyCombinations(formData as PivotTableQueryFormData, ownState as OwnState);
+
+  // in case of inconsistency it will only not display some columns
+  const queryLength = Math.min(queriesData.length, groupbyCombinations.length)
+  const data: QueryData[] = [];
+  for (let i = 0; i < queryLength; i++) {
+    data.push({
+      data: queriesData[i].data,
+      groupby: groupbyCombinations[i],
+    })
   }
 
-  const data = queriesData.map(query => query.data);
-  
   // main query is the query with all columns -> with the longest colnames
-  const main_query = queriesData.reduce((main_query, query) => (query.colnames.length > main_query.colnames.length ? query : main_query));
-  const colnames = main_query.colnames;
-  const coltypes = main_query.coltypes;
+  const mainQuery = queriesData.reduce((main_query, query) => (query.colnames.length > main_query.colnames.length ? query : main_query));
+  const colnames = mainQuery.colnames;
+  const coltypes = mainQuery.coltypes;
 
   const dateFormatters = colnames
     .filter(
@@ -145,7 +151,7 @@ export default function transformProps(chartProps: ChartProps<QueryFormData>) {
           if (granularity) {
             // time column use formats based on granularity
             formatter = getTimeFormatterForGranularity(granularity);
-          } else if (isNumeric(temporalColname, data)) {
+          } else if (isNumeric(temporalColname, mainQuery.data)) {
             formatter = getTimeFormatter(DATABASE_DATETIME);
           } else {
             // if no column-specific format, print cell as is
@@ -161,7 +167,7 @@ export default function transformProps(chartProps: ChartProps<QueryFormData>) {
       },
       {},
     );
-  const metricColorFormatters = data.flatMap(d => getColorFormatters(conditionalFormatting, d));
+  const metricColorFormatters = getColorFormatters(conditionalFormatting, mainQuery.data);
 
   return {
     width,
@@ -199,6 +205,7 @@ export default function transformProps(chartProps: ChartProps<QueryFormData>) {
     optionalGroupbyColumns,
     selectedGroupbyRows,
     selectedGroupbyColumns,
-    rowsColumnsCombinations,
+    availableGroupbyRows,
+    availableGroupbyColumns,
   };
 }

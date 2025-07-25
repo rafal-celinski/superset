@@ -55,7 +55,7 @@ const config: ControlPanelConfig = {
             name: 'groupbyRows',
             config: {
               ...sharedControls.groupby,
-              label: t('Rows'),
+              label: t('Default rows'),
               description: t('Columns to group by on the rows'),
             },
           },
@@ -65,7 +65,7 @@ const config: ControlPanelConfig = {
         //     name: 'optionalGroupbyColumns',
         //     config: {
         //       ...sharedControls.groupby,
-        //       label: t('optional Columns'),
+        //       label: t('Optional columns'),
         //       description: t('Columns to group by on the columns'),
         //     },
         //   },
@@ -75,7 +75,7 @@ const config: ControlPanelConfig = {
             name: 'optionalGroupbyRows',
             config: {
               ...sharedControls.groupby,
-              label: t('optional Rows'),
+              label: t('Optional rows'),
               description: t('Columns to group by on the rows'),
             },
           },
@@ -128,7 +128,6 @@ const config: ControlPanelConfig = {
             name: 'metricsLayout',
             config: {
               type: 'RadioButtonControl',
-              renderTrigger: true,
               label: t('Apply metrics on'),
               default: MetricsLayoutEnum.COLUMNS,
               options: [
@@ -240,7 +239,6 @@ const config: ControlPanelConfig = {
               label: t('Transpose pivot'),
               default: false,
               description: t('Swap rows and columns'),
-              renderTrigger: true,
             },
           },
         ],
@@ -255,7 +253,6 @@ const config: ControlPanelConfig = {
                 'Display metrics side by side within each column, as ' +
                   'opposed to each column being displayed side by side for each metric.',
               ),
-              // renderTrigger: true,
             },
           },
         ],

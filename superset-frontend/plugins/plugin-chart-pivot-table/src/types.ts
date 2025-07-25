@@ -90,6 +90,8 @@ interface PivotTableCustomizeProps {
   allowRenderHtml?: boolean;
   optionalGroupbyRows: QueryFormColumn[];
   optionalGroupbyColumns: QueryFormColumn[];
+  availableGroupbyRows: QueryFormColumn[];
+  availableGroupbyColumns: QueryFormColumn[];
 }
 
 export type PivotTableQueryFormData = QueryFormData &
@@ -98,21 +100,27 @@ export type PivotTableQueryFormData = QueryFormData &
 
 export type PivotTableProps = PivotTableStylesProps &
   PivotTableCustomizeProps & {
-    data: Array<DataRecord[]>;
+    data: QueryData[];
   } & {
     selectedGroupbyRows: QueryFormColumn[];
     selectedGroupbyColumns: QueryFormColumn[];
-    rowsColumnsCombinations: Combination[];
   };
   
-export interface Options {
-  ownState: {
+export interface OwnState {
     selectedGroupbyRows: QueryFormColumn[];
     selectedGroupbyColumns: QueryFormColumn[];
-  }
 }
 
-export interface Combination {
+export interface Options {
+  ownState: OwnState;
+}
+
+export interface Groupby {
   rows: QueryFormColumn[],
   columns: QueryFormColumn[],
+}
+
+export interface QueryData {
+  data: DataRecord[],
+  groupby: Groupby,
 }

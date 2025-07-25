@@ -17,7 +17,7 @@
  * under the License.
  */
 import { useCallback, useMemo, useState} from 'react';
-import { MinusSquareOutlined, PlusSquareOutlined } from '@ant-design/icons';
+import { ConsoleSqlOutlined, MinusSquareOutlined, PlusSquareOutlined } from '@ant-design/icons';
 import {
   AdhocMetric,
   BinaryQueryObjectFilterClause,
@@ -91,8 +91,6 @@ export default function PivotTableChart(props: PivotTableProps) {
     data,
     height,
     width,
-    groupbyRows,
-    groupbyColumns,
     metrics,
     colOrder,
     rowOrder,
@@ -118,11 +116,10 @@ export default function PivotTableChart(props: PivotTableProps) {
     onContextMenu,
     timeGrainSqla,
     allowRenderHtml,
-    optionalGroupbyRows,
-    optionalGroupbyColumns,
+    availableGroupbyRows,
+    availableGroupbyColumns,
     selectedGroupbyRows: selectedGroupbyRowsRaw,
     selectedGroupbyColumns: selctedGroupbyColumnsRaw,
-    rowsColumnsCombinations: rowsColumnsCombinationsRaw,
   } = props;
 
   const theme = useTheme();
@@ -181,19 +178,31 @@ export default function PivotTableChart(props: PivotTableProps) {
 
   const unpivotedData = useMemo(
     () =>
-      data.map(d => d.reduce(
-        (acc: Record<string, any>[], record: Record<string, any>) => [
-          ...acc,
-          ...metricNames
-            .map((name: string) => ({
-              ...record,
-              [METRIC_KEY]: name,
-              value: record[name],
-            }))
-            .filter(record => record.value !== null),
-        ],
-        [],
-      )),
+      data.flatMap(d => { 
+        let {columns, rows} = d.groupby;
+    
+        if (metricsLayout === MetricsLayoutEnum.ROWS) {
+          rows = combineMetric ? [...rows, METRIC_KEY] : [METRIC_KEY, ...rows];
+        } else {
+          columns = combineMetric ? [...columns, METRIC_KEY] : [METRIC_KEY, ...columns];
+        }
+
+        return d.data.reduce(
+          (acc: Record<string, any>[], record: Record<string, any>) => [
+            ...acc,
+            ...metricNames
+              .map((name: string) => ({
+                ...record,
+                [METRIC_KEY]: name,
+                value: record[name],
+                columns: columns,
+                rows: rows,
+              }))
+              .filter(record => record.value !== null),
+          ],
+          [],
+        )}
+      ),
     [data, metricNames],
   );
 
@@ -221,7 +230,7 @@ export default function PivotTableChart(props: PivotTableProps) {
   const [rows, cols] = useMemo(() => {
     let [rows_, cols_] = transposePivot
       ? [selectedGroupbyColumns, selectedGroupbyRows]
-      : [selectedGroupbyRows, selectedGroupbyColumns];
+      : [selectedGroupbyRows, selectedGroupbyColumns]; 
 
     if (metricsLayout === MetricsLayoutEnum.ROWS) {
       rows_ = combineMetric ? [...rows_, METRIC_KEY] : [METRIC_KEY, ...rows_];
@@ -236,19 +245,6 @@ export default function PivotTableChart(props: PivotTableProps) {
     metricsLayout,
     transposePivot,
   ]);
-
-    
-  const rowsColumnsCombinations = rowsColumnsCombinationsRaw.map(rowsColumnsCombination => {
-    let {columns, rows} = rowsColumnsCombination;
-    
-    if (metricsLayout === MetricsLayoutEnum.ROWS) {
-      rows = combineMetric ? [...rows, METRIC_KEY] : [METRIC_KEY, ...rows];
-    } else {
-      columns = combineMetric ? [...columns, METRIC_KEY] : [METRIC_KEY, ...columns];
-    }
-
-    return {columns, rows};
-  });
 
   const handleChange = useCallback(
     (filters: SelectedFiltersType) => {
@@ -524,9 +520,6 @@ export default function PivotTableChart(props: PivotTableProps) {
     ],
   );
 
-  const availableGroupbyColumns = [...new Set([...groupbyColumns, ...optionalGroupbyColumns])];
-  const availableGroupbyRows = [...new Set([...groupbyRows, ...optionalGroupbyRows, ])];
-
   const labelToColumn = new Map(availableGroupbyColumns.map(col => [getColumnLabel(col), col]))
   const labelToRow = new Map(availableGroupbyRows.map(row => [getColumnLabel(row), row]))
 
@@ -536,15 +529,6 @@ export default function PivotTableChart(props: PivotTableProps) {
     });
   };
   
-  const resetTable = () => {
-    setDataMask({
-      ownState: {
-        selectedGroupbyRows: undefined,
-        selectedGroupbyColumns: undefined,
-      },
-    });
-  };
-
   const handleChangeRow = (selectedValues: string[]) => {
     const selectedGroupbyRows = selectedValues.map(v => labelToRow.get(v)!);
     
@@ -575,9 +559,6 @@ export default function PivotTableChart(props: PivotTableProps) {
         <Button onClick={updateTable}>
           Apply
         </Button>
-        {/* <Button onClick={resetTable}>
-          Reset
-        </Button> */}
       </SelectWrapper>
       <PivotTableWrapper>
         <PivotTable
@@ -595,7 +576,6 @@ export default function PivotTableChart(props: PivotTableProps) {
           namesMapping={verboseMap}
           onContextMenu={handleContextMenu}
           allowRenderHtml={allowRenderHtml}
-          rowsColumnsCombinations={rowsColumnsCombinations}
         />
       </PivotTableWrapper>
     </Styles>

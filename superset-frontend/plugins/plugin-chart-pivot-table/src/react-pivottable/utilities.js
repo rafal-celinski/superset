@@ -332,10 +332,7 @@ class PivotData {
     this.sorted = false;
 
     // iterate through input, putting data for cells
-    const dataLength = Math.min(this.props.data.length, this.props.rowsColumnsCombinations.length);
-    for (let i = 0; i < dataLength; i++) {
-      PivotData.forEachRecord(this.props.data[i], this.props.rowsColumnsCombinations[i], this.processRecord);
-    }
+    PivotData.forEachRecord(this.props.data, this.processRecord);
   }
 
   getFormattedAggregator(record, totalsKeys) {
@@ -424,13 +421,12 @@ class PivotData {
     return this.rowKeys;
   }
 
-  processRecord(record, rowsColumnsCombination) {
+  processRecord(record) {
     // this code is called in a tight loop
     const colKey = [];
     const rowKey = [];
 
-    // teraz moze zadziałąć oryginalne ?
-    for (const col of rowsColumnsCombination.columns) {
+    for (const col of record.columns) {
       if (col in record) {
         colKey.push(record[col]);
       } else {
@@ -438,7 +434,7 @@ class PivotData {
       }
     }
 
-    for (const row of rowsColumnsCombination.rows) {
+    for (const row of record.rows) {
       if (row in record) {
         rowKey.push(record[row]);
       } else {
@@ -531,10 +527,10 @@ class PivotData {
 }
 
 // can handle arrays or jQuery selections of tables
-PivotData.forEachRecord = function (data, rowColumnCombination, processRecord) {
+PivotData.forEachRecord = function (data, processRecord) {
   if (Array.isArray(data)) {
     // array of objects
-    return data.map(record => processRecord(record, rowColumnCombination));
+    return data.map(record => processRecord(record));
   }
   throw new Error(t('Unknown input format'));
 };
