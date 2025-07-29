@@ -87,6 +87,8 @@ interface PivotTableCustomizeProps {
   timeGrainSqla?: TimeGranularity;
   time_grain_sqla?: TimeGranularity;
   granularity_sqla?: string;
+  optionalGroupbyRows?: QueryFormColumn[];
+  optionalGroupbyColumns?: QueryFormColumn[];
 }
 
 export type PivotTableQueryFormData = QueryFormData &
@@ -95,5 +97,28 @@ export type PivotTableQueryFormData = QueryFormData &
 
 export type PivotTableProps = PivotTableStylesProps &
   PivotTableCustomizeProps & {
-    data: DataRecord[];
-  };
+    data: QueryData[];
+  } & 
+  OwnState & {
+    availableGroupbyRows: QueryFormColumn[];
+    availableGroupbyColumns: QueryFormColumn[];
+  }
+  
+export interface OwnState {
+    selectedGroupbyRows: QueryFormColumn[];
+    selectedGroupbyColumns: QueryFormColumn[];
+}
+
+export interface Options {
+  ownState: OwnState;
+}
+
+export interface Groupby {
+  rows: QueryFormColumn[],
+  columns: QueryFormColumn[],
+}
+
+export interface QueryData {
+  data: DataRecord[],
+  groupby: Groupby,
+}

@@ -28,7 +28,8 @@ import {
   TimeFormats,
 } from '@superset-ui/core';
 import { getColorFormatters } from '@superset-ui/chart-controls';
-import { DateFormatter } from '../types';
+import { DateFormatter, PivotTableQueryFormData, OwnState, QueryData} from '../types';
+import buildGroupbyCombinations from './utilities';
 
 const { DATABASE_DATETIME } = TimeFormats;
 
@@ -81,8 +82,9 @@ export default function transformProps(chartProps: ChartProps<QueryFormData>) {
     filterState,
     datasource: { verboseMap = {}, columnFormats = {}, currencyFormats = {} },
     emitCrossFilters,
+    ownState,
   } = chartProps;
-  const { data, colnames, coltypes } = queriesData[0];
+  
   const {
     groupbyRows,
     groupbyColumns,
@@ -90,7 +92,6 @@ export default function transformProps(chartProps: ChartProps<QueryFormData>) {
     tableRenderer,
     colOrder,
     rowOrder,
-    aggregateFunction,
     transposePivot,
     combineMetric,
     rowSubtotalPosition,
@@ -105,9 +106,33 @@ export default function transformProps(chartProps: ChartProps<QueryFormData>) {
     conditionalFormatting,
     timeGrainSqla,
     currencyFormat,
+    optionalGroupbyRows = [],
+    optionalGroupbyColumns = [],
   } = formData;
   const { selectedFilters } = filterState;
   const granularity = extractTimegrain(rawFormData);
+
+  const availableGroupbyColumns = [...new Set([...groupbyColumns, ...optionalGroupbyColumns])];
+  const availableGroupbyRows = [...new Set([...groupbyRows, ...optionalGroupbyRows])];
+
+  const selectedGroupbyRows = ownState.selectedGroupbyRows ?? groupbyRows;
+  const selectedGroupbyColumns = ownState.selectedGroupbyColumns ?? groupbyColumns;
+  const groupbyCombinations = buildGroupbyCombinations(formData as PivotTableQueryFormData, ownState as OwnState);
+
+  // in case of inconsistency it will only not display some columns
+  const queryLength = Math.min(queriesData.length, groupbyCombinations.length)
+  const data: QueryData[] = [];
+  for (let i = 0; i < queryLength; i++) {
+    data.push({
+      data: queriesData[i].data,
+      groupby: groupbyCombinations[i],
+    })
+  }
+
+  // main query is the query with all columns -> with the longest colnames
+  const mainQuery = queriesData.reduce((main_query, query) => (query.colnames.length > main_query.colnames.length ? query : main_query));
+  const colnames = mainQuery.colnames;
+  const coltypes = mainQuery.coltypes;
 
   const dateFormatters = colnames
     .filter(
@@ -124,7 +149,7 @@ export default function transformProps(chartProps: ChartProps<QueryFormData>) {
           if (granularity) {
             // time column use formats based on granularity
             formatter = getTimeFormatterForGranularity(granularity);
-          } else if (isNumeric(temporalColname, data)) {
+          } else if (isNumeric(temporalColname, mainQuery.data)) {
             formatter = getTimeFormatter(DATABASE_DATETIME);
           } else {
             // if no column-specific format, print cell as is
@@ -140,7 +165,7 @@ export default function transformProps(chartProps: ChartProps<QueryFormData>) {
       },
       {},
     );
-  const metricColorFormatters = getColorFormatters(conditionalFormatting, data);
+  const metricColorFormatters = getColorFormatters(conditionalFormatting, mainQuery.data);
 
   return {
     width,
@@ -152,7 +177,6 @@ export default function transformProps(chartProps: ChartProps<QueryFormData>) {
     tableRenderer,
     colOrder,
     rowOrder,
-    aggregateFunction,
     transposePivot,
     combineMetric,
     rowSubtotalPosition,
@@ -174,5 +198,9 @@ export default function transformProps(chartProps: ChartProps<QueryFormData>) {
     dateFormatters,
     onContextMenu,
     timeGrainSqla,
+    selectedGroupbyRows,
+    selectedGroupbyColumns,
+    availableGroupbyRows,
+    availableGroupbyColumns,
   };
 }

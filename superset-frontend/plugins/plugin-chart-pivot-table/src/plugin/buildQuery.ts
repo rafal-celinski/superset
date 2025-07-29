@@ -24,36 +24,42 @@ import {
   QueryFormColumn,
   QueryFormOrderBy,
 } from '@superset-ui/core';
-import { PivotTableQueryFormData } from '../types';
+import { PivotTableQueryFormData, Options, Groupby} from '../types';
+import buildGroupbyCombinations from './utilities';
 
-export default function buildQuery(formData: PivotTableQueryFormData) {
-  const { groupbyColumns = [], groupbyRows = [], extra_form_data } = formData;
-  const time_grain_sqla =
-    extra_form_data?.time_grain_sqla || formData.time_grain_sqla;
-
+function getQueryColumns(groupby: Groupby, formData: PivotTableQueryFormData, time_grain_sqla: any) {
   // TODO: add deduping of AdhocColumns
-  const columns = Array.from(
-    new Set([
-      ...ensureIsArray<QueryFormColumn>(groupbyColumns),
-      ...ensureIsArray<QueryFormColumn>(groupbyRows),
-    ]),
-  ).map(col => {
-    if (
-      isPhysicalColumn(col) &&
-      time_grain_sqla &&
-      (formData?.temporal_columns_lookup?.[col] ||
-        formData.granularity_sqla === col)
-    ) {
-      return {
-        timeGrain: time_grain_sqla,
-        columnType: 'BASE_AXIS',
-        sqlExpression: col,
-        label: col,
-        expressionType: 'SQL',
-      } as AdhocColumn;
-    }
-    return col;
-  });
+  return Array.from(
+      new Set([
+        ...ensureIsArray<QueryFormColumn>(groupby.rows),
+        ...ensureIsArray<QueryFormColumn>(groupby.columns),
+      ])
+    ).map(col => {
+      if (
+        isPhysicalColumn(col) &&
+        time_grain_sqla &&
+        (formData?.temporal_columns_lookup?.[col] ||
+          formData.granularity_sqla === col)
+      ) {
+        return {
+          timeGrain: time_grain_sqla,
+          columnType: 'BASE_AXIS',
+          sqlExpression: col,
+          label: col,
+          expressionType: 'SQL',
+        } as AdhocColumn;
+      }
+      return col;
+    });
+}
+
+export default function buildQuery(formData: PivotTableQueryFormData, options?: Options) {
+  const {extra_form_data} = formData;
+  const time_grain_sqla = extra_form_data?.time_grain_sqla || formData.time_grain_sqla;
+
+  const ownState = options?.ownState;
+  const groupbyCombinations: Groupby[] = buildGroupbyCombinations(formData, ownState);
+  const queriesColumns: Array<QueryFormColumn[]> = groupbyCombinations.map(groupby => getQueryColumns(groupby, formData, time_grain_sqla));
 
   return buildQueryContext(formData, baseQueryObject => {
     const { series_limit_metric, metrics, order_desc } = baseQueryObject;
@@ -63,12 +69,15 @@ export default function buildQuery(formData: PivotTableQueryFormData) {
     } else if (Array.isArray(metrics) && metrics[0]) {
       orderBy = [[metrics[0], !order_desc]];
     }
-    return [
-      {
+
+    let queryObjects = queriesColumns.map(columns => {
+      return {
         ...baseQueryObject,
         orderby: orderBy,
         columns,
-      },
-    ];
+      }
+    });
+
+    return queryObjects;
   });
 }

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState} from 'react';
 import { MinusSquareOutlined, PlusSquareOutlined } from '@ant-design/icons';
 import {
   AdhocMetric,
@@ -30,12 +30,11 @@ import {
   isAdhocColumn,
   isFeatureEnabled,
   isPhysicalColumn,
-  NumberFormatter,
   styled,
   t,
   useTheme,
 } from '@superset-ui/core';
-import { aggregatorTemplates, PivotTable, sortAs } from './react-pivottable';
+import {PivotTable, sortAs } from './react-pivottable';
 import {
   FilterType,
   MetricsLayoutEnum,
@@ -43,6 +42,8 @@ import {
   PivotTableStylesProps,
   SelectedFiltersType,
 } from './types';
+
+import {Button, Select} from 'antd'; 
 
 const Styles = styled.div<PivotTableStylesProps>`
   ${({ height, width, margin }) => `
@@ -54,8 +55,16 @@ const Styles = styled.div<PivotTableStylesProps>`
  `}
 `;
 
+const SelectWrapper = styled.div`
+  select, .ant-select, .ant-select-selector {
+    min-width: 100px;
+    margin: 4px;
+  };
+  margin: 8px;
+`;
+
 const PivotTableWrapper = styled.div`
-  height: 100%;
+  height: 90%;
   max-width: inherit;
   overflow: auto;
 `;
@@ -73,51 +82,6 @@ const StyledMinusSquareOutlined = styled(MinusSquareOutlined)`
   stroke-width: 16px;
 `;
 
-const aggregatorsFactory = (formatter: NumberFormatter) => ({
-  Count: aggregatorTemplates.count(formatter),
-  'Count Unique Values': aggregatorTemplates.countUnique(formatter),
-  'List Unique Values': aggregatorTemplates.listUnique(', ', formatter),
-  Sum: aggregatorTemplates.sum(formatter),
-  Average: aggregatorTemplates.average(formatter),
-  Median: aggregatorTemplates.median(formatter),
-  'Sample Variance': aggregatorTemplates.var(1, formatter),
-  'Sample Standard Deviation': aggregatorTemplates.stdev(1, formatter),
-  Minimum: aggregatorTemplates.min(formatter),
-  Maximum: aggregatorTemplates.max(formatter),
-  First: aggregatorTemplates.first(formatter),
-  Last: aggregatorTemplates.last(formatter),
-  'Sum as Fraction of Total': aggregatorTemplates.fractionOf(
-    aggregatorTemplates.sum(),
-    'total',
-    formatter,
-  ),
-  'Sum as Fraction of Rows': aggregatorTemplates.fractionOf(
-    aggregatorTemplates.sum(),
-    'row',
-    formatter,
-  ),
-  'Sum as Fraction of Columns': aggregatorTemplates.fractionOf(
-    aggregatorTemplates.sum(),
-    'col',
-    formatter,
-  ),
-  'Count as Fraction of Total': aggregatorTemplates.fractionOf(
-    aggregatorTemplates.count(),
-    'total',
-    formatter,
-  ),
-  'Count as Fraction of Rows': aggregatorTemplates.fractionOf(
-    aggregatorTemplates.count(),
-    'row',
-    formatter,
-  ),
-  'Count as Fraction of Columns': aggregatorTemplates.fractionOf(
-    aggregatorTemplates.count(),
-    'col',
-    formatter,
-  ),
-});
-
 /* If you change this logic, please update the corresponding Python
  * function (https://github.com/apache/superset/blob/master/superset/charts/post_processing.py),
  * or reach out to @betodealmeida.
@@ -127,12 +91,9 @@ export default function PivotTableChart(props: PivotTableProps) {
     data,
     height,
     width,
-    groupbyRows: groupbyRowsRaw,
-    groupbyColumns: groupbyColumnsRaw,
     metrics,
     colOrder,
     rowOrder,
-    aggregateFunction,
     transposePivot,
     combineMetric,
     rowSubtotalPosition,
@@ -154,6 +115,10 @@ export default function PivotTableChart(props: PivotTableProps) {
     dateFormatters,
     onContextMenu,
     timeGrainSqla,
+    availableGroupbyRows,
+    availableGroupbyColumns,
+    selectedGroupbyRows: selectedGroupbyRowsRaw,
+    selectedGroupbyColumns: selctedGroupbyColumnsRaw,
   } = props;
 
   const theme = useTheme();
@@ -212,28 +177,41 @@ export default function PivotTableChart(props: PivotTableProps) {
 
   const unpivotedData = useMemo(
     () =>
-      data.reduce(
-        (acc: Record<string, any>[], record: Record<string, any>) => [
-          ...acc,
-          ...metricNames
-            .map((name: string) => ({
-              ...record,
-              [METRIC_KEY]: name,
-              value: record[name],
-            }))
-            .filter(record => record.value !== null),
-        ],
-        [],
+      data.flatMap(d => { 
+        let {columns, rows} = d.groupby;
+    
+        if (metricsLayout === MetricsLayoutEnum.ROWS) {
+          rows = combineMetric ? [...rows, METRIC_KEY] : [METRIC_KEY, ...rows];
+        } else {
+          columns = combineMetric ? [...columns, METRIC_KEY] : [METRIC_KEY, ...columns];
+        }
+
+        return d.data.reduce(
+          (acc: Record<string, any>[], record: Record<string, any>) => [
+            ...acc,
+            ...metricNames
+              .map((name: string) => ({
+                ...record,
+                [METRIC_KEY]: name,
+                value: record[name],
+                columns: columns,
+                rows: rows,
+              }))
+              .filter(record => record.value !== null),
+          ],
+          [],
+        )}
       ),
     [data, metricNames],
   );
-  const groupbyRows = useMemo(
-    () => groupbyRowsRaw.map(getColumnLabel),
-    [groupbyRowsRaw],
+
+  const selectedGroupbyRows = useMemo(
+    () => selectedGroupbyRowsRaw.map(getColumnLabel),
+    [selectedGroupbyRowsRaw],
   );
-  const groupbyColumns = useMemo(
-    () => groupbyColumnsRaw.map(getColumnLabel),
-    [groupbyColumnsRaw],
+  const selectedGroupbyColumns = useMemo(
+    () => selctedGroupbyColumnsRaw.map(getColumnLabel),
+    [selctedGroupbyColumnsRaw],
   );
 
   const sorters = useMemo(
@@ -243,10 +221,15 @@ export default function PivotTableChart(props: PivotTableProps) {
     [metricNames],
   );
 
+    const [queryConfig, setQueryConfig] = useState({
+    selectedGroupbyColumns: selctedGroupbyColumnsRaw,
+    selectedGroupbyRows: selectedGroupbyRowsRaw,
+  });
+
   const [rows, cols] = useMemo(() => {
     let [rows_, cols_] = transposePivot
-      ? [groupbyColumns, groupbyRows]
-      : [groupbyRows, groupbyColumns];
+      ? [selectedGroupbyColumns, selectedGroupbyRows]
+      : [selectedGroupbyRows, selectedGroupbyColumns]; 
 
     if (metricsLayout === MetricsLayoutEnum.ROWS) {
       rows_ = combineMetric ? [...rows_, METRIC_KEY] : [METRIC_KEY, ...rows_];
@@ -256,8 +239,8 @@ export default function PivotTableChart(props: PivotTableProps) {
     return [rows_, cols_];
   }, [
     combineMetric,
-    groupbyColumns,
-    groupbyRows,
+    selectedGroupbyColumns,
+    selectedGroupbyRows,
     metricsLayout,
     transposePivot,
   ]);
@@ -265,7 +248,7 @@ export default function PivotTableChart(props: PivotTableProps) {
   const handleChange = useCallback(
     (filters: SelectedFiltersType) => {
       const filterKeys = Object.keys(filters);
-      const groupby = [...groupbyRowsRaw, ...groupbyColumnsRaw];
+      const groupby = [...selectedGroupbyRowsRaw, ...selctedGroupbyColumnsRaw];
       setDataMask({
         extraFormData: {
           filters:
@@ -305,7 +288,7 @@ export default function PivotTableChart(props: PivotTableProps) {
         },
       });
     },
-    [groupbyColumnsRaw, groupbyRowsRaw, setDataMask],
+    [selctedGroupbyColumnsRaw, selectedGroupbyRowsRaw, setDataMask],
   );
 
   const getCrossFilterDataMask = useCallback(
@@ -326,7 +309,7 @@ export default function PivotTableChart(props: PivotTableProps) {
       }
 
       const filterKeys = Object.keys(values);
-      const groupby = [...groupbyRowsRaw, ...groupbyColumnsRaw];
+      const groupby = [...selectedGroupbyRowsRaw, ...selctedGroupbyColumnsRaw];
       return {
         dataMask: {
           extraFormData: {
@@ -369,7 +352,7 @@ export default function PivotTableChart(props: PivotTableProps) {
         isCurrentValueSelected: isActiveFilterValue(key, val),
       };
     },
-    [groupbyColumnsRaw, groupbyRowsRaw, selectedFilters],
+    [selctedGroupbyColumnsRaw, selectedGroupbyRowsRaw, selectedFilters],
   );
 
   const toggleFilter = useCallback(
@@ -521,7 +504,7 @@ export default function PivotTableChart(props: PivotTableProps) {
                 val: Object.values(dataPoint)[0],
               },
             ],
-            groupbyFieldName: rowKey ? 'groupbyRows' : 'groupbyColumns',
+            groupbyFieldName: rowKey ? 'selectedGroupbyRows' : 'selectedGroupbyColumns',
           },
         });
       }
@@ -536,17 +519,53 @@ export default function PivotTableChart(props: PivotTableProps) {
     ],
   );
 
+  const labelToColumn = new Map(availableGroupbyColumns.map(col => [getColumnLabel(col), col]))
+  const labelToRow = new Map(availableGroupbyRows.map(row => [getColumnLabel(row), row]))
+
+  const updateTable = () => {
+    setDataMask({
+      ownState: queryConfig,
+    });
+  };
+  
+  const handleChangeRow = (selectedValues: string[]) => {
+    const selectedGroupbyRows = selectedValues.map(v => labelToRow.get(v)!);
+    
+    setQueryConfig(prev => ({
+      ...prev,
+      selectedGroupbyRows,
+    }));
+  };
+
+  const handleChangeColumn = (selectedValues: string[]) => {
+    const selectedGroupbyColumns = selectedValues.map(v => labelToColumn.get(v)!);
+
+    setQueryConfig(prev => ({
+      ...prev,
+      selectedGroupbyColumns,
+    }));
+  };
+  
   return (
     <Styles height={height} width={width} margin={theme.gridUnit * 4}>
+      <SelectWrapper>
+        <label>{t('Group by:')}</label>
+        <Select mode="multiple" onChange={handleChangeRow} defaultValue={selectedGroupbyRows} options={availableGroupbyRows.map(row => ({value: getColumnLabel(row), label: getColumnLabel(row)}))}/>
+
+        {/* <label>{t('Columns:')}</label>
+        <Select mode="multiple" onChange={handleChangeColumn} defaultValue={selectedGroupbyColumns} options={availableGroupbyColumns.map(column => ({value: getColumnLabel(column), label: getColumnLabel(column)}))}/> */}
+
+        <Button onClick={updateTable}>
+          Apply
+        </Button>
+      </SelectWrapper>
       <PivotTableWrapper>
         <PivotTable
           data={unpivotedData}
           rows={rows}
           cols={cols}
-          aggregatorsFactory={aggregatorsFactory}
           defaultFormatter={defaultFormatter}
           customFormatters={metricFormatters}
-          aggregatorName={aggregateFunction}
           vals={vals}
           colOrder={colOrder}
           rowOrder={rowOrder}
