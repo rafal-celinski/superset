@@ -1,5 +1,5 @@
 {
-  "name": "@play/plugin-chart-pivot-table",
+  "name": "@superset-ui/plugin-chart-pivot-table",
   "version": "0.18.25",
   "description": "Superset Chart - Pivot Table",
   "sideEffects": false,
