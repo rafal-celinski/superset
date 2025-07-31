@@ -519,7 +519,7 @@ class PivotData {
 PivotData.forEachRecord = function (input, processRecord) {
   if (Array.isArray(input)) {
     // array of objects
-    return data.map(record => processRecord(record));
+    return input.map(record => processRecord(record));
   }
   throw new Error(t('Unknown input format'));
 };
